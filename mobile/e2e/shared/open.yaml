@@ -15,5 +15,5 @@ appId: ${APP_ID}
           text: "Continue"
           retryTapIfNoChange: false
 - extendedWaitUntil:
-    visible: "Ready when you are"
-    timeout: 90000
+    visible: "Online"
+    timeout: 180000
