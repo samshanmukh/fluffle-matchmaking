@@ -1,0 +1,29 @@
+{
+  "name": "Blocked people and \"don't match me again\" are never paired",
+  "description": "A block works in both directions. \"Don't match me again\" is permanent; a plain decline only keeps the two apart for two minutes.",
+  "steps": [
+    {"at": 0, "do": "block", "user": "ben", "other": "ana"},
+    {"at": 0, "do": "join", "user": "ana", "languages": ["english"]},
+    {"at": 1000, "do": "join", "user": "ben", "languages": ["english"]},
+    {"at": 2000, "do": "tick"},
+    {"do": "expect_no_offers"},
+    {"at": 3000, "do": "join", "user": "carl", "languages": ["english"]},
+    {"at": 4000, "do": "tick"},
+    {"do": "expect_offer", "users": ["ana", "carl"]},
+    {"do": "expect_phase", "user": "ben", "phase": "waiting"},
+    {"at": 5000, "do": "decline", "user": "carl", "never_again": true},
+    {"do": "expect_event", "user": "carl", "event": "left", "reason": "declined"},
+    {"do": "expect_phase", "user": "ana", "phase": "waiting"},
+    {"at": 6000, "do": "join", "user": "carl", "languages": ["english"]},
+    {"at": 7000, "do": "tick"},
+    {"do": "expect_offer", "users": ["ben", "carl"]},
+    {"do": "expect_phase", "user": "ana", "phase": "waiting"},
+    {"at": 8000, "do": "decline", "user": "carl"},
+    {"at": 9000, "do": "join", "user": "carl", "languages": ["english"]},
+    {"at": 10000, "do": "tick"},
+    {"do": "expect_no_offers"},
+    {"at": 128000, "do": "tick"},
+    {"do": "expect_offer", "users": ["ben", "carl"]},
+    {"do": "expect_phase", "user": "ana", "phase": "waiting"}
+  ]
+}

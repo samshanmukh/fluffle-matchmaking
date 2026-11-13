@@ -1,0 +1,19 @@
+{
+  "name": "A partner request puts that language set first",
+  "description": "With a request for English + Spanish, the pair sharing exactly those languages beats a longer wait. A request that also names a topic both picked ranks higher still.",
+  "partner_requests": [{"languages": ["english", "spanish"]}, {"languages": ["english"], "topic": "politics"}],
+  "steps": [
+    {"at": 0, "do": "join", "user": "carl", "languages": ["french", "italian"]},
+    {"at": 2000, "do": "join", "user": "ana", "languages": ["english", "spanish", "french"]},
+    {"at": 3000, "do": "join", "user": "bea", "languages": ["english", "spanish", "german"]},
+    {"at": 4000, "do": "tick"},
+    {"do": "expect_offer", "users": ["ana", "bea"], "languages": ["english", "spanish"]},
+    {"do": "expect_phase", "user": "carl", "phase": "waiting"},
+    {"at": 5000, "do": "join", "user": "finn", "languages": ["english"]},
+    {"at": 6000, "do": "join", "user": "gia", "languages": ["english"], "topic": "politics"},
+    {"at": 7000, "do": "join", "user": "hal", "languages": ["english"], "topic": "politics"},
+    {"at": 8000, "do": "tick"},
+    {"do": "expect_offer", "users": ["gia", "hal"], "languages": ["english"], "topic": "politics"},
+    {"do": "expect_phase", "user": "finn", "phase": "waiting"}
+  ]
+}

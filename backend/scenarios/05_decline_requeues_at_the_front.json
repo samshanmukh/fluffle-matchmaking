@@ -1,0 +1,26 @@
+{
+  "name": "A decline: the decliner leaves, the other goes back to the front",
+  "description": "Ben declines. He leaves the queue; Ana returns with her original place, so she is paired before people who joined after her.",
+  "steps": [
+    {"at": 0, "do": "join", "user": "ana", "languages": ["english"]},
+    {"at": 1000, "do": "join", "user": "ben", "languages": ["english"]},
+    {"at": 2000, "do": "tick"},
+    {"do": "expect_offer", "users": ["ana", "ben"]},
+    {"at": 3000, "do": "join", "user": "carl", "languages": ["english"]},
+    {"at": 4000, "do": "join", "user": "dana", "languages": ["english"]},
+    {"at": 5000, "do": "tick"},
+    {"do": "expect_offer", "users": ["carl", "dana"]},
+    {"at": 6000, "do": "decline", "user": "carl"},
+    {"do": "expect_event", "user": "carl", "event": "left", "reason": "declined"},
+    {"do": "expect_event", "user": "dana", "event": "requeued", "reason": "partner_declined"},
+    {"at": 7000, "do": "decline", "user": "ben"},
+    {"do": "expect_event", "user": "ben", "event": "left", "reason": "declined"},
+    {"do": "expect_event", "user": "ana", "event": "requeued", "reason": "partner_declined"},
+    {"do": "expect_phase", "user": "ben", "phase": "idle"},
+    {"do": "expect_phase", "user": "ana", "phase": "waiting"},
+    {"at": 8000, "do": "join", "user": "erin", "languages": ["english"]},
+    {"at": 9000, "do": "tick"},
+    {"do": "expect_offer", "users": ["ana", "dana"]},
+    {"do": "expect_phase", "user": "erin", "phase": "waiting"}
+  ]
+}

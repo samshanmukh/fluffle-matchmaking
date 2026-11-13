@@ -1,0 +1,19 @@
+{
+  "name": "Topic is a preference, not a filter",
+  "description": "A shared topic beats a longer wait, but different topics or a topic on one side still match, with no agreed topic.",
+  "steps": [
+    {"at": 0, "do": "join", "user": "finn", "languages": ["english"]},
+    {"at": 20000, "do": "join", "user": "ana", "languages": ["english"], "topic": "sports"},
+    {"at": 35000, "do": "join", "user": "ben", "languages": ["english"], "topic": "sports"},
+    {"at": 36000, "do": "tick"},
+    {"do": "expect_offer", "users": ["ana", "ben"], "languages": ["english"], "topic": "sports"},
+    {"do": "expect_phase", "user": "finn", "phase": "waiting"},
+    {"at": 37000, "do": "join", "user": "gus", "languages": ["english"], "topic": "music"},
+    {"at": 38000, "do": "tick"},
+    {"do": "expect_offer", "users": ["finn", "gus"], "languages": ["english"], "topic": "none"},
+    {"at": 39000, "do": "join", "user": "ivy", "languages": ["hindi"], "topic": "music"},
+    {"at": 40000, "do": "join", "user": "jay", "languages": ["hindi"], "topic": "travel"},
+    {"at": 41000, "do": "tick"},
+    {"do": "expect_offer", "users": ["ivy", "jay"], "languages": ["hindi"], "topic": "none"}
+  ]
+}

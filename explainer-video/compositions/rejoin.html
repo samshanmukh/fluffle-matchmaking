@@ -1,0 +1,444 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      font-family: Inter, sans-serif;
+      color: var(--ink);
+    }
+
+    /* header (same look as the first scene) */
+    .hdr-in {
+      position: absolute;
+      left: 194px;
+      top: 104px;
+      width: 1532px;
+    }
+    .kicker {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--accent);
+      line-height: 36px;
+    }
+    .head {
+      margin-top: 6px;
+      font-size: 48px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      line-height: 58px;
+      white-space: nowrap;
+    }
+    .sub {
+      margin-top: 6px;
+      font-size: 30px;
+      font-weight: 400;
+      line-height: 40px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    /* people (same look as the first scene) */
+    .card {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 200px;
+      height: 250px;
+      padding: 14px;
+      background: var(--card);
+      border: 2px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 6px 0 rgba(28, 27, 25, 0.06);
+    }
+    .who {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 44px;
+    }
+    .av {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 44px;
+      text-align: center;
+      flex: none;
+    }
+    .nm {
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .chips {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+      height: 40px;
+    }
+    .chip {
+      height: 40px;
+      padding: 0 11px;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 40px;
+    }
+    .en {
+      background: var(--en);
+    }
+    .topic {
+      margin-top: 8px;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 34px;
+    }
+    .rj-wait {
+      position: relative;
+      height: 34px;
+      font-size: 28px;
+      line-height: 34px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .rj-wait span {
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+
+    /* join-order badges under the queue */
+    .rj-badge {
+      position: absolute;
+      top: 592px;
+      width: 200px;
+      text-align: center;
+    }
+    .rj-badge span,
+    .rj-reason span {
+      display: inline-block;
+      height: 42px;
+      padding: 0 16px;
+      border-radius: 21px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 42px;
+    }
+    .rj-badge span {
+      background: var(--ink);
+    }
+
+    /* call annotations */
+    .rj-reason,
+    .rj-call {
+      position: absolute;
+      left: 756px;
+      width: 408px;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .rj-reason {
+      top: 604px;
+      height: 42px;
+    }
+    .rj-call {
+      top: 920px;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 36px;
+    }
+    .rj-call.live {
+      color: var(--ready);
+    }
+    .rj-call.over {
+      color: var(--muted);
+    }
+
+    /* the ranked list of possible pairs */
+    .rj-row {
+      position: absolute;
+      left: 440px;
+      width: 1040px;
+      height: 64px;
+      padding: 0 20px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      font-size: 32px;
+      line-height: 64px;
+      white-space: nowrap;
+    }
+    .rj-rank {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--ink);
+      color: #fff;
+      font-weight: 700;
+      font-size: 28px;
+      line-height: 44px;
+      text-align: center;
+      flex: none;
+    }
+    .rj-pair {
+      width: 240px;
+      font-weight: 700;
+      flex: none;
+    }
+    .rj-why {
+      color: var(--muted);
+    }
+    .rj-why b {
+      font-weight: 700;
+      color: var(--ink);
+    }
+    #rj-row3 .rj-rank {
+      background: var(--line);
+      color: var(--muted);
+    }
+    #rj-row3 .rj-pair {
+      color: var(--muted);
+      text-decoration: line-through;
+    }
+    /* corner panel: the data structure or algorithm behind the current step */
+    .algo-box {
+      position: absolute;
+      right: 194px;
+      top: 100px;
+      height: 42px;
+      display: flex;
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--ink);
+      color: #fff;
+      font-size: 28px;
+      line-height: 42px;
+      white-space: nowrap;
+    }
+    .algo-tag {
+      padding: 0 12px;
+      background: var(--accent);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .algo-txt {
+      padding: 0 14px;
+    }
+  </style>
+
+  <div id="root" data-composition-id="rejoin" data-width="1920" data-height="1080">
+    <div id="rj-h1" class="clip" data-start="0" data-duration="4.5" data-track-index="2">
+      <div class="hdr-in" id="rj-h1-in">
+        <div class="kicker">After the call</div>
+        <div class="head">Ana and Ben finish their call. Carl is still waiting.</div>
+        <div class="sub">All three chose English and Sports, so the earlier rules tie.</div>
+      </div>
+    </div>
+    <div id="rj-h2" class="clip" data-start="4.5" data-duration="5" data-track-index="2">
+      <div class="hdr-in" id="rj-h2-in">
+        <div class="kicker">Back in the queue</div>
+        <div class="head">Both tap match again. Ana's request arrives first.</div>
+        <div class="sub">The server handles one request at a time and numbers each join.</div>
+      </div>
+    </div>
+    <div id="rj-h3" class="clip" data-start="9.5" data-duration="5.5" data-track-index="2">
+      <div class="hdr-in" id="rj-h3-in">
+        <div class="kicker">Three possible pairs</div>
+        <div class="head">Carl has waited longest, so pairs with him come first.</div>
+        <div class="sub">Ana and Ben just talked, so they are not offered each other again.</div>
+      </div>
+    </div>
+    <div id="rj-h4" class="clip" data-start="15" data-duration="5" data-track-index="2">
+      <div class="hdr-in" id="rj-h4-in">
+        <div class="kicker">The tie-break</div>
+        <div class="head">Both tie on Carl's wait. Ana rejoined first, so she wins.</div>
+        <div class="sub">If that ties too, the lower join number wins.</div>
+      </div>
+    </div>
+    <div id="rj-h5" class="clip" data-start="20" data-duration="5" data-track-index="2">
+      <div class="hdr-in" id="rj-h5-in">
+        <div class="kicker">The full tie-break</div>
+        <div class="head">Longest wait, then the other person's wait, then join order.</div>
+        <div class="sub">Ben is now first in line for the next arrival.</div>
+      </div>
+    </div>
+
+    <!-- corner panel -->
+    <div id="rj-a1" class="clip" data-start="0" data-duration="4.5" data-track-index="3">
+      <div class="algo-box rj-algo-in" id="rj-a1-in"><span class="algo-tag">State</span><span class="algo-txt">Each user is in one state: waiting, offered or in a call</span></div>
+    </div>
+    <div id="rj-a2" class="clip" data-start="4.5" data-duration="5" data-track-index="3">
+      <div class="algo-box rj-algo-in" id="rj-a2-in"><span class="algo-tag">Queue</span><span class="algo-txt">Each join gets a sequence number · O(1)</span></div>
+    </div>
+    <div id="rj-a3" class="clip" data-start="9.5" data-duration="5.5" data-track-index="3">
+      <div class="algo-box rj-algo-in" id="rj-a3-in"><span class="algo-tag">Filter</span><span class="algo-txt">Blocks and recent partners in a hash set · O(1)</span></div>
+    </div>
+    <div id="rj-a4" class="clip" data-start="15" data-duration="5" data-track-index="3">
+      <div class="algo-box rj-algo-in" id="rj-a4-in"><span class="algo-tag">Rank</span><span class="algo-txt">Compare tuples: (wait, other wait, join number)</span></div>
+    </div>
+    <div id="rj-a5" class="clip" data-start="20" data-duration="5" data-track-index="3">
+      <div class="algo-box rj-algo-in" id="rj-a5-in"><span class="algo-tag">Total</span><span class="algo-txt">Indexed, sorted, deterministic · about O(n log n)</span></div>
+    </div>
+
+    <!-- join-order badges -->
+    <div class="rj-badge" id="rj-b-ana" style="left: 900px"><span>join #1</span></div>
+    <div class="rj-badge" id="rj-b-ben" style="left: 1140px"><span>join #2</span></div>
+
+    <!-- call annotations -->
+    <div class="rj-call live" id="rj-live">Call in progress · Sports</div>
+    <div class="rj-call over" id="rj-ended">Call ended</div>
+    <div class="rj-reason" id="rj-r"><span>Rejoined first</span></div>
+    <div class="rj-call" id="rj-l">EN · topic: Sports</div>
+
+    <!-- ranked candidate pairs -->
+    <div class="rj-row" id="rj-row1" style="top: 660px">
+      <span class="rj-rank">1</span><span class="rj-pair">Ana + Carl</span>
+      <span class="rj-why">longest wait 45 s, then <b id="rj-x1">2 s</b></span>
+    </div>
+    <div class="rj-row" id="rj-row2" style="top: 736px">
+      <span class="rj-rank">2</span><span class="rj-pair">Ben + Carl</span>
+      <span class="rj-why">longest wait 45 s, then <b id="rj-x2">1 s</b></span>
+    </div>
+    <div class="rj-row" id="rj-row3" style="top: 812px">
+      <span class="rj-rank">–</span><span class="rj-pair">Ana + Ben</span>
+      <span class="rj-why">talked a moment ago, so skipped</span>
+    </div>
+
+    <!-- people -->
+    <div class="card" id="rj-c-carl">
+      <div class="who"><span class="av" style="background: #3d6b7d">C</span><span class="nm">Carl</span></div>
+      <div class="chips"><span class="chip en">EN</span></div>
+      <div class="topic">Sports</div>
+      <div class="rj-wait"><span>waited 45 s</span></div>
+    </div>
+    <div class="card" id="rj-c-ana">
+      <div class="who"><span class="av" style="background: #b5651d">A</span><span class="nm">Ana</span></div>
+      <div class="chips"><span class="chip en">EN</span></div>
+      <div class="topic">Sports</div>
+      <div class="rj-wait"><span id="rj-wa-call">in a call</span><span id="rj-wa-wait">waited 2 s</span></div>
+    </div>
+    <div class="card" id="rj-c-ben">
+      <div class="who"><span class="av" style="background: #2a7f62">B</span><span class="nm">Ben</span></div>
+      <div class="chips"><span class="chip en">EN</span></div>
+      <div class="topic">Sports</div>
+      <div class="rj-wait"><span id="rj-wb-call">in a call</span><span id="rj-wb-wait">waited 1 s</span></div>
+    </div>
+  </div>
+
+  <script>
+    const tl = gsap.timeline({ paused: true });
+
+    const TOP = 328;
+    const LOW = 660;
+    const pos = {
+      carl: { x: 660, y: TOP },
+      ana: { x: 756, y: LOW },
+      ben: { x: 964, y: LOW },
+    };
+    const move = (id, x, y, at, dur = 0.8) => {
+      tl.fromTo(
+        "#rj-c-" + id,
+        { x: pos[id].x, y: pos[id].y },
+        { x, y, duration: dur, ease: "power3.inOut", immediateRender: false },
+        at,
+      );
+      pos[id] = { x, y };
+    };
+    const show = (sel, at, dur = 0.35) =>
+      tl.fromTo(sel, { opacity: 0 }, { opacity: 1, duration: dur, ease: "power2.out", immediateRender: false }, at);
+    const hide = (sel, at, dur = 0.25) =>
+      tl.fromTo(sel, { opacity: 1 }, { opacity: 0, duration: dur, ease: "power2.in", immediateRender: false }, at);
+
+    // Starting states.
+    Object.keys(pos).forEach((id) => gsap.set("#rj-c-" + id, { x: pos[id].x, y: pos[id].y, opacity: 0 }));
+    gsap.set(
+      "#rj-h1-in, #rj-h2-in, #rj-h3-in, #rj-h4-in, #rj-h5-in, .rj-badge, .rj-row, #rj-live, #rj-ended, #rj-r, #rj-l, #rj-wa-wait, #rj-wb-wait, .rj-algo-in",
+      { opacity: 0 },
+    );
+
+    // Headers: blur in, fade out just before the slot ends (the last one stays).
+    [
+      ["#rj-h1-in", 0, 4.5],
+      ["#rj-h2-in", 4.5, 9.5],
+      ["#rj-h3-in", 9.5, 15],
+      ["#rj-h4-in", 15, 20],
+      ["#rj-h5-in", 20, null],
+      ["#rj-a1-in", 0, 4.5],
+      ["#rj-a2-in", 4.5, 9.5],
+      ["#rj-a3-in", 9.5, 15.0],
+      ["#rj-a4-in", 15, 20],
+      ["#rj-a5-in", 20, null],
+    ].forEach(([sel, start, end]) => {
+      tl.fromTo(
+        sel,
+        { opacity: 0, filter: "blur(8px)" },
+        { opacity: 1, filter: "blur(0px)", duration: 0.3, ease: "power2.out", immediateRender: false },
+        start + 0.05,
+      );
+      if (end !== null) {
+        tl.fromTo(
+          sel,
+          { opacity: 1 },
+          { opacity: 0, duration: 0.2, ease: "power2.in", immediateRender: false },
+          end - 0.22,
+        );
+      }
+    });
+
+    // 0s — Ana and Ben are on a call; Carl waits.
+    show("#rj-c-carl, #rj-c-ana, #rj-c-ben", 0.1, 0.4);
+    show("#rj-live", 0.3);
+    hide("#rj-live", 2.3);
+    show("#rj-ended", 2.5);
+
+    // 4.5s — both rejoin; the server numbers each join as it arrives.
+    hide("#rj-ended", 5.1);
+    move("ana", 900, TOP, 5.3);
+    hide("#rj-wa-call", 5.9);
+    show("#rj-wa-wait", 6.1);
+    show("#rj-b-ana", 6.2);
+    move("ben", 1140, TOP, 6.6);
+    hide("#rj-wb-call", 7.2);
+    show("#rj-wb-wait", 7.4);
+    show("#rj-b-ben", 7.5);
+
+    // 9.5s — the three candidate pairs, best first.
+    show("#rj-row1", 10.2);
+    show("#rj-row2", 10.9);
+    show("#rj-row3", 11.9);
+
+    // 15s — the tie-break: the other person's wait.
+    tl.fromTo(
+      "#rj-x1, #rj-x2",
+      { color: "#1c1b19" },
+      { color: "#5b3df5", duration: 0.3, ease: "power2.out", immediateRender: false },
+      15.6,
+    );
+    tl.fromTo(
+      "#rj-row1",
+      { backgroundColor: "rgba(91,61,245,0)" },
+      { backgroundColor: "rgba(91,61,245,0.12)", duration: 0.4, ease: "power2.inOut", immediateRender: false },
+      16.0,
+    );
+    hide("#rj-row1, #rj-row2, #rj-row3, #rj-b-ana", 17.3);
+    move("carl", 756, LOW, 17.6);
+    move("ana", 964, LOW, 17.66);
+    show("#rj-r", 18.3);
+    show("#rj-l", 18.55);
+
+    // 20s — Ben waits at the front.
+    hide("#rj-b-ben", 20.4);
+    move("ben", 660, TOP, 20.6, 0.9);
+
+    window.__timelines["rejoin"] = tl;
+  </script>
+</template>

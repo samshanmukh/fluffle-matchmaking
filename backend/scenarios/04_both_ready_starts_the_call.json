@@ -1,0 +1,24 @@
+{
+  "name": "The call starts only when both say ready",
+  "description": "Both see the offer together. One ready is not enough; the second starts the call, labelled with the shared languages and topic.",
+  "steps": [
+    {"at": 0, "do": "join", "user": "ana", "languages": ["english", "spanish"], "topic": "sports"},
+    {"at": 500, "do": "join", "user": "ben", "languages": ["spanish", "english"], "topic": "sports"},
+    {"at": 1000, "do": "tick"},
+    {"do": "expect_offer", "users": ["ana", "ben"], "languages": ["english", "spanish"], "topic": "sports"},
+    {"do": "expect_event", "user": "ana", "event": "offer"},
+    {"do": "expect_event", "user": "ben", "event": "offer"},
+    {"at": 4000, "do": "ready", "user": "ana"},
+    {"do": "expect_phase", "user": "ana", "phase": "offered"},
+    {"do": "expect_phase", "user": "ben", "phase": "offered"},
+    {"at": 9000, "do": "ready", "user": "ben"},
+    {"do": "expect_event", "user": "ana", "event": "call_started"},
+    {"do": "expect_event", "user": "ben", "event": "call_started"},
+    {"do": "expect_phase", "user": "ana", "phase": "in_call"},
+    {"do": "expect_phase", "user": "ben", "phase": "in_call"},
+    {"at": 60000, "do": "end_call", "user": "ben"},
+    {"do": "expect_event", "user": "ana", "event": "call_ended", "reason": "partner_left"},
+    {"do": "expect_phase", "user": "ana", "phase": "idle"},
+    {"do": "expect_phase", "user": "ben", "phase": "idle"}
+  ]
+}
