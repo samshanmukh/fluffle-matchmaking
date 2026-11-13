@@ -18,7 +18,7 @@ use axum::{Json, Router};
 use futures_util::{SinkExt, StreamExt};
 use serde::Deserialize;
 use serde_json::{Value, json};
-use tokio::sync::mpsc;
+use tokio::sync::{Notify, mpsc};
 
 use crate::engine::{Answer, Config, Engine, Event, MatchId, Ms, PartnerRequest};
 
@@ -46,9 +46,15 @@ pub fn default_partner_requests() -> Vec<PartnerRequest> {
     ]
 }
 
+/// Messages a connection may have queued before it is judged too slow.
+/// A user receives a handful of messages a minute, so this is generous.
+const OUTBOUND_QUEUE: usize = 256;
+
 struct Conn {
     id: u64,
-    tx: mpsc::UnboundedSender<String>,
+    tx: mpsc::Sender<String>,
+    /// Tells the connection's task to close (queue overflow, or replaced).
+    kick: Arc<Notify>,
 }
 
 pub struct Hub {
@@ -66,7 +72,12 @@ impl Hub {
 
     fn send(&self, user: &str, msg: Value) {
         if let Some(conn) = self.conns.get(user) {
-            let _ = conn.tx.send(msg.to_string());
+            // Never wait on a client while holding the engine lock. A client
+            // that is not draining its queue is disconnected, which frees
+            // its place exactly like any other dropped connection.
+            if let Err(mpsc::error::TrySendError::Full(_)) = conn.tx.try_send(msg.to_string()) {
+                conn.kick.notify_one();
+            }
         }
     }
 
@@ -185,7 +196,8 @@ async fn stats(State(shared): State<Shared>) -> impl IntoResponse {
 async fn client(socket: WebSocket, shared: Shared, q: ConnQuery, heartbeat: Duration) {
     let user = q.user_id;
     let (mut sink, mut stream) = socket.split();
-    let (tx, mut rx) = mpsc::unbounded_channel::<String>();
+    let (tx, mut rx) = mpsc::channel::<String>(OUTBOUND_QUEUE);
+    let kick = Arc::new(Notify::new());
 
     let conn_id = {
         let mut hub = shared.lock().unwrap();
@@ -193,8 +205,8 @@ async fn client(socket: WebSocket, shared: Shared, q: ConnQuery, heartbeat: Dura
         hub.next_conn += 1;
         // A second connection for the same user replaces the first: a user
         // holds one place, whichever device they are on.
-        if let Some(old) = hub.conns.insert(user.clone(), Conn { id, tx }) {
-            let _ = old.tx.send(json!({ "type": "replaced" }).to_string());
+        if let Some(old) = hub.conns.insert(user.clone(), Conn { id, tx, kick: kick.clone() }) {
+            let _ = old.tx.try_send(json!({ "type": "replaced" }).to_string());
         }
         hub.names.insert(user.clone(), q.name.unwrap_or_else(|| user.clone()));
         let cfg = hub.engine.config();
@@ -221,7 +233,11 @@ async fn client(socket: WebSocket, shared: Shared, q: ConnQuery, heartbeat: Dura
     loop {
         // No message at all within the heartbeat window means the phone is
         // gone (apps ping every few seconds), so stop offering them matches.
-        let frame = match tokio::time::timeout(heartbeat, stream.next()).await {
+        let frame = tokio::select! {
+            _ = kick.notified() => break,
+            frame = tokio::time::timeout(heartbeat, stream.next()) => frame,
+        };
+        let frame = match frame {
             Err(_) | Ok(None) | Ok(Some(Err(_))) => break,
             Ok(Some(Ok(frame))) => frame,
         };

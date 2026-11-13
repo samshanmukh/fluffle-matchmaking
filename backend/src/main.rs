@@ -28,8 +28,14 @@ async fn main() -> std::io::Result<()> {
         Err(_) => eprintln!("no {path}; using the built-in partner requests"),
     }
 
-    let port = env_u64("PORT", 8080);
-    let listener = tokio::net::TcpListener::bind(("0.0.0.0", port as u16)).await?;
+    let port: u16 = match std::env::var("PORT") {
+        Err(_) => 8080,
+        Ok(v) => v.parse().unwrap_or_else(|_| {
+            eprintln!("PORT must be a number from 0 to 65535, got {v:?}");
+            std::process::exit(1);
+        }),
+    };
+    let listener = tokio::net::TcpListener::bind(("0.0.0.0", port)).await?;
     println!("matchmaking server on http://0.0.0.0:{port}  (WebSocket: /ws?user_id=...)");
     println!(
         "tick {} ms · offer window {} ms · wait budget {} ms · {} partner request(s)",

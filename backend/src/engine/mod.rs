@@ -92,7 +92,10 @@ pub struct Engine {
     /// How many waiting people speak each language (for the estimate).
     lang_waiting: HashMap<LangId, usize>,
     /// Recent completed waits per language: (when matched, how long they waited).
-    samples: HashMap<LangId, VecDeque<(Ms, Ms)>>,
+    /// Stored under every language of the call, tagged with a sample id so a
+    /// wait is counted once however many of those languages a query spans.
+    samples: HashMap<LangId, VecDeque<(u64, Ms, Ms)>>,
+    next_sample: u64,
     /// Test hook: run the O(n²) reference selection instead of the indexed one.
     pub use_reference_selection: bool,
 }
@@ -144,6 +147,7 @@ impl Engine {
             next_match: 1,
             lang_waiting: HashMap::new(),
             samples: HashMap::new(),
+            next_sample: 0,
             use_reference_selection: false,
         }
     }
@@ -486,9 +490,11 @@ impl Engine {
             self.slots.insert(w.cand.uid, Slot::InCall(id));
             // A real wait that ended in a call: this is what the estimate learns from.
             let waited = now.saturating_sub(w.cand.seniority);
+            let sample = self.next_sample;
+            self.next_sample += 1;
             for l in &offer.shared {
                 let q = self.samples.entry(*l).or_default();
-                q.push_back((now, waited));
+                q.push_back((sample, now, waited));
                 while q.len() > self.cfg.estimate_max_samples {
                     q.pop_front();
                 }
@@ -576,13 +582,17 @@ impl Engine {
     //    pairable, the last pass would have paired them.
 
     fn recent_waits(&self, langs: &[LangId], now: Ms) -> Vec<Ms> {
-        let mut waits: Vec<Ms> = langs
+        let mut found: Vec<(u64, Ms)> = langs
             .iter()
             .filter_map(|l| self.samples.get(l))
             .flat_map(|q| q.iter())
-            .filter(|(at, _)| at + self.cfg.estimate_window_ms > now)
-            .map(|(_, waited)| *waited)
+            .filter(|(_, at, _)| at + self.cfg.estimate_window_ms > now)
+            .map(|(id, _, waited)| (*id, *waited))
             .collect();
+        // The same wait appears under each shared language; count it once.
+        found.sort_unstable();
+        found.dedup_by_key(|(id, _)| *id);
+        let mut waits: Vec<Ms> = found.into_iter().map(|(_, waited)| waited).collect();
         waits.sort_unstable();
         waits
     }
@@ -629,7 +639,9 @@ impl Engine {
             }
             let someone_waiting = w.cand.langs.iter().any(|l| self.lang_waiting.get(l).copied().unwrap_or(0) > 1);
             let estimate = Estimate { bucket, sample_size, someone_waiting };
-            if w.last_estimate != Some(estimate) {
+            // Only a change of bucket is news; the sample count moves after
+            // every call and would otherwise message everyone waiting.
+            if w.last_estimate.map(|e| e.bucket) != Some(bucket) {
                 if let Some(Slot::Waiting(w)) = self.slots.get_mut(&uid) {
                     w.last_estimate = Some(estimate);
                 }

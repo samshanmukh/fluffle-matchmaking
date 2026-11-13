@@ -197,6 +197,32 @@ async fn the_start_screen_can_ask_for_an_estimate_over_http() {
     assert!(get("/health").await.ends_with("ok"));
 }
 
+#[tokio::test]
+async fn a_client_that_never_reads_is_disconnected_instead_of_filling_memory() {
+    let (addr, _server) = spawn_local(fast()).await.unwrap();
+    let mut hog = Client::connect(addr, "hog").await;
+    hog.join(&["en"], None).await;
+    // Ask for far more replies than the queue holds, and read none of them.
+    let ping = json!({ "type": "ping" }).to_string();
+    for _ in 0..400_000 {
+        if hog.ws.send(Message::Text(ping.clone().into())).await.is_err() {
+            break; // the server already hung up
+        }
+    }
+    // The server must have dropped the connection well before answering them all.
+    let mut pongs = 0;
+    while let Ok(Some(Ok(_))) = tokio::time::timeout(Duration::from_secs(5), hog.ws.next()).await {
+        pongs += 1;
+    }
+    assert!(pongs < 400_000, "every reply was queued: the outbound queue is unbounded");
+    // And the place in the queue was freed: two new people pair with each other.
+    let mut ana = Client::connect(addr, "ana").await;
+    let mut ben = Client::connect(addr, "ben").await;
+    ana.join(&["en"], None).await;
+    ben.join(&["en"], None).await;
+    assert_eq!(ana.wait_for("offer").await["partner"], "ben");
+}
+
 /// The brief's concurrency requirement, over the real network path: many
 /// people join at once; nobody ends up in two matches, nobody is dropped.
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]

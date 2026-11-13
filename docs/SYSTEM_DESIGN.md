@@ -99,6 +99,7 @@ One rule, in one place (`engine/mod.rs`, "wait estimate"):
 - **Fewer than three recent waits:** unknown. The app hides the estimate and says it has no data. It never invents a number.
 - **While waiting:** the same median, but never a bucket the person has already outlasted. After a minute of waiting it will not say "under a minute".
 - Updates are sent only when the bucket changes.
+- Each person's wait counts once per call, however many languages the two shared.
 
 ## 7. Deliberate differences from the brief's defaults
 
@@ -148,6 +149,7 @@ These runs put clients and server on one machine, so they measure the server's b
 - **Greedy can strand scarce languages.** Two English + Swahili speakers pair with each other (exact set), leaving an English-only and a Swahili-only speaker unmatched, when pairing across would have matched all four. The brief's order requires this.
 - **Partner requests never switch off.** A real system would deactivate a request once its hours are collected.
 - **One process, in memory.** A restart empties the queue; clients must rejoin. The brief allows this.
+- **No authentication.** `user_id` is whatever the client sends, so anyone who knows an id can connect as that user and take over their place. Sign-up and login are out of scope in the brief; a real deployment would derive the id from a signed token.
 - **Estimates are weakest for rare languages**, which is where people most need them.
 
 ## 10. What comes next with one more day
