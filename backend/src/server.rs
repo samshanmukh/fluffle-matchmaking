@@ -203,7 +203,7 @@ async fn estimate(State(shared): State<Shared>, Query(q): Query<EstimateQuery>) 
     Json(hub.engine.estimate(&languages, hub.now()))
 }
 
-/// How many people the "who's here" display describes individually.
+/// How many people the "who's online" display describes individually.
 const PRESENCE_LIMIT: usize = 12;
 
 /// A number the app turns into an avatar. Derived from the user id (FNV-1a, the
@@ -213,18 +213,38 @@ fn avatar_code(user: &str) -> u32 {
     user.bytes().fold(2_166_136_261, |h, b| (h ^ u32::from(b)).wrapping_mul(16_777_619))
 }
 
-/// Who is waiting right now and shares a language: a count, and for the first
-/// few an avatar code and region. No names and no ids.
-async fn presence(State(shared): State<Shared>, Query(q): Query<EstimateQuery>) -> impl IntoResponse {
+#[derive(Deserialize)]
+struct PresenceQuery {
+    /// Comma-separated.
+    #[serde(default)]
+    languages: String,
+    /// The person asking, so they are not listed to themselves.
+    #[serde(default)]
+    user_id: Option<String>,
+}
+
+/// Who is online right now, for the start screen: how many people are
+/// connected, how many of them are waiting and share one of the given
+/// languages (the ones who can be matched this minute), and for the first few
+/// an avatar code, a region and whether they are one of those. No names and
+/// no ids. People who are waiting come first, longest wait first.
+async fn presence(State(shared): State<Shared>, Query(q): Query<PresenceQuery>) -> impl IntoResponse {
     let languages: Vec<String> = q.languages.split(',').map(str::to_string).collect();
+    let me = q.user_id.as_deref();
     let hub = shared.lock().unwrap();
-    let users = hub.engine.waiting_sharing(&languages);
-    let people: Vec<Value> = users
+
+    let ready: Vec<String> = hub.engine.waiting_sharing(&languages).into_iter().filter(|u| Some(u.as_str()) != me).collect();
+    let mut others: Vec<&String> = hub.conns.keys().filter(|u| Some(u.as_str()) != me && !ready.contains(*u)).collect();
+    others.sort_unstable(); // a stable order, so the list does not shuffle between polls
+
+    let person = |user: &String, waiting: bool| json!({ "avatar": avatar_code(user), "region": hub.regions.get(user), "waiting": waiting });
+    let people: Vec<Value> = ready
         .iter()
+        .map(|u| person(u, true))
+        .chain(others.iter().map(|u| person(u, false)))
         .take(PRESENCE_LIMIT)
-        .map(|user| json!({ "avatar": avatar_code(user), "region": hub.regions.get(user) }))
         .collect();
-    Json(json!({ "waiting": users.len(), "people": people }))
+    Json(json!({ "online": ready.len() + others.len(), "waiting": ready.len(), "people": people }))
 }
 
 async fn stats(State(shared): State<Shared>) -> impl IntoResponse {
