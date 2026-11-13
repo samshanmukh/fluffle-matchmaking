@@ -57,3 +57,11 @@ cd mobile && node scripts/partner.mjs --name Bea --region BR
 ```
 
 On each device, pick a language you have in common and tap **Find a match**.
+
+To fill the **Active now** list while trying things alone, put a dozen scripted people online. Six of
+them wait in different languages (English, Spanish, Hindi, German, Portuguese, Japanese) and say ready
+when you match with them:
+
+```bash
+cd mobile && npm run crowd
+```

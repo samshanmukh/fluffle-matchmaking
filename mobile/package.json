@@ -39,7 +39,8 @@
     "test": "jest",
     "test:ios": "jest --selectProjects iOS",
     "test:android": "jest --selectProjects Android",
-    "test:devices": "node scripts/e2e.mjs"
+    "test:devices": "node scripts/e2e.mjs",
+    "crowd": "node scripts/crowd.mjs"
   },
   "private": true
 }
