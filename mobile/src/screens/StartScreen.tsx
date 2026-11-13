@@ -34,6 +34,9 @@ interface Props {
   onDismissNotice: () => void;
 }
 
+/** The short status at the right of the header. */
+const LINK_LABEL: Record<Link, string> = { online: 'Online', connecting: 'Connecting', offline: 'Offline', replaced: 'Elsewhere' };
+
 const OFFLINE: Record<Exclude<Link, 'online'>, string> = {
   connecting: 'Connecting',
   offline: "Can't reach Fluffle, retrying",
@@ -101,6 +104,10 @@ export function StartScreen(props: Props) {
             <Text style={styles.region} numberOfLines={1} accessibilityLabel={`Connecting from ${regionName(region)}`}>
               {flag(region)} {regionName(region)}
             </Text>
+          </View>
+          <View style={styles.link} accessibilityRole="text" accessibilityLabel={LINK_LABEL[link]}>
+            <View style={[styles.linkDot, { backgroundColor: online ? color.live : color.warn }]} />
+            <Text style={styles.linkLabel}>{LINK_LABEL[link]}</Text>
           </View>
         </View>
 
@@ -199,6 +206,9 @@ const styles = StyleSheet.create({
   hello: { ...font.medium, fontSize: 15, lineHeight: 20, color: color.onAccent, flexShrink: 1 },
   nameInput: { ...font.medium, fontSize: 15, minHeight: 36, paddingHorizontal: 12, borderRadius: 18, backgroundColor: color.solid, color: color.ink },
   region: { ...type.small, color: color.onAccentSoft },
+  link: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 28, paddingHorizontal: 10, borderRadius: radius.pill, backgroundColor: 'rgba(255,255,255,0.16)' },
+  linkDot: { width: 8, height: 8, borderRadius: 4 },
+  linkLabel: { ...font.medium, fontSize: 13, lineHeight: 18, color: color.onAccent },
   h1Lead: { ...font.regular, fontSize: 19, lineHeight: 24, color: color.onAccentSoft, marginTop: space.l },
   h1: { ...type.display, color: color.onAccent, textDecorationLine: 'underline' },
   hereHead: { flexDirection: 'row', alignItems: 'baseline', gap: space.s, marginTop: space.l },
