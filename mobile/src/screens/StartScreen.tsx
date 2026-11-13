@@ -49,11 +49,16 @@ export function StartScreen(props: Props) {
   const [editingName, setEditingName] = useState(false);
   const online = link === 'online';
   const { estimate, failed } = useEstimate(languages, online);
-  const presence = usePresence(languages, online);
+  const presence = usePresence(languages, props.userId, online);
   const full = languages.length >= MAX_LANGUAGES;
   const canMatch = online && languages.length > 0 && !view.joining;
   const wait = online ? estimateBeforeJoining(estimate, languages, failed) : OFFLINE[link];
   const notice = view.notice ? noticeCopy(view.notice) : null;
+
+  // The countries the people online are in, most people first.
+  const tally = new Map<string | null, number>();
+  for (const p of presence?.people ?? []) tally.set(p.region, (tally.get(p.region) ?? 0) + 1);
+  const countries = [...tally].map(([code, count]) => ({ code, count })).sort((x, y) => y.count - x.count);
 
   const toggleLanguage = (id: string) =>
     props.onLanguages(languages.includes(id) ? languages.filter((l) => l !== id) : [...languages, id]);
@@ -117,20 +122,34 @@ export function StartScreen(props: Props) {
         </Text>
 
         <View style={styles.hereHead} accessibilityLiveRegion="polite">
-          <Text style={styles.hereLabel}>Here now</Text>
-          <Text style={styles.hereCount}>{online && languages.length > 0 ? presenceLine(presence ? presence.waiting : null) : '—'}</Text>
+          <Text style={styles.hereLabel}>Active now</Text>
+          <Text style={styles.hereCount}>{online ? presenceLine(presence) : '—'}</Text>
         </View>
         {presence && presence.people.length > 0 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.faces} style={styles.facesScroll}>
-            {presence.people.map((p, i) => (
-              <View key={`${p.avatar}-${i}`} style={styles.face}>
-                <Avatar person={p.avatar} region={p.region} size={50} />
-                <Text style={styles.faceLabel} numberOfLines={1}>
-                  {regionName(p.region)}
-                </Text>
-              </View>
-            ))}
-          </ScrollView>
+          <>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.faces} style={styles.facesScroll}>
+              {presence.people.map((p, i) => (
+                // A green ring: waiting now and shares a language, so tapping Find a match would pair you.
+                <View key={`${p.avatar}-${i}`} style={[styles.faceRing, p.waiting && styles.faceReady]}>
+                  <Avatar person={p.avatar} size={46} />
+                </View>
+              ))}
+            </ScrollView>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.faces} style={styles.facesScroll}>
+              {countries.map((c) => (
+                <View key={c.code ?? 'unknown'} style={styles.country} accessibilityLabel={`${regionName(c.code)}, ${c.count}`}>
+                  <View style={styles.countryDisc}>
+                    <Text style={styles.countryFlag} allowFontScaling={false}>
+                      {flag(c.code)}
+                    </Text>
+                  </View>
+                  <Text style={styles.faceLabel} numberOfLines={1}>
+                    {c.count > 1 ? `${regionName(c.code)} · ${c.count}` : regionName(c.code)}
+                  </Text>
+                </View>
+              ))}
+            </ScrollView>
+          </>
         )}
       </Header>
 
@@ -215,9 +234,13 @@ const styles = StyleSheet.create({
   hereLabel: { ...font.medium, fontSize: 15, lineHeight: 20, color: color.onAccent },
   hereCount: { ...font.regular, fontSize: 15, lineHeight: 20, color: color.onAccentSoft },
   facesScroll: { marginHorizontal: -space.xl, marginTop: space.m },
-  faces: { paddingHorizontal: space.xl, gap: space.l },
-  face: { alignItems: 'center', width: 62, gap: 6 },
-  faceLabel: { ...type.small, color: color.onAccentSoft, maxWidth: 70 },
+  faces: { paddingHorizontal: space.xl, gap: space.m },
+  faceRing: { padding: 2, borderRadius: 27, borderWidth: 2, borderColor: 'transparent' },
+  faceReady: { borderColor: color.live },
+  country: { alignItems: 'center', gap: 4, minWidth: 54 },
+  countryDisc: { width: 46, height: 46, borderRadius: 23, backgroundColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' },
+  countryFlag: { fontSize: 24, lineHeight: 30 },
+  faceLabel: { ...type.small, color: color.onAccentSoft },
   scroll: { padding: space.edge, paddingBottom: space.xl },
   notice: { flexDirection: 'row', alignItems: 'center', marginBottom: space.s },
   noticeBar: { width: 5, alignSelf: 'stretch', backgroundColor: color.warn },

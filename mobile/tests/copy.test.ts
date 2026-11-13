@@ -22,11 +22,11 @@ describe('copy', () => {
     expect(estimateBeforeJoining({ bucket: 'over_five_minutes', sample_size: 3, someone_waiting: false }, ['hindi'], false)).toBe('May take over five minutes');
   });
 
-  test('presence is a count, nothing more', () => {
+  test('presence says who is online and how many could be matched now', () => {
     expect(presenceLine(null)).toBe('Looking…');
-    expect(presenceLine(0)).toBe('Nobody yet');
-    expect(presenceLine(1)).toBe('1 person');
-    expect(presenceLine(7)).toBe('7 people');
+    expect(presenceLine({ online: 0, waiting: 0 })).toBe('Nobody yet');
+    expect(presenceLine({ online: 2, waiting: 0 })).toBe('2 online');
+    expect(presenceLine({ online: 7, waiting: 3 })).toBe('7 online · 3 ready');
   });
 
   test('every way back to the start says what happened, briefly', () => {

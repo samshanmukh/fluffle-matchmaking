@@ -2,7 +2,7 @@
 appId: ${APP_ID}
 ---
 - runFlow: ../shared/open.yaml
-- assertVisible: "Here now"
+- assertVisible: "Active now"
 - assertVisible: "1 of 5"
 # Simulators and emulators report the United States as their region.
 - assertVisible: ".*United States.*"

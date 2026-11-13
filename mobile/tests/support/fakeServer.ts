@@ -69,7 +69,7 @@ export async function drop() {
 
 export const UNKNOWN: Estimate = { bucket: 'unknown', sample_size: 0, someone_waiting: false };
 
-export const NOBODY: Presence = { waiting: 0, people: [] };
+export const NOBODY: Presence = { online: 0, waiting: 0, people: [] };
 
 /** Answers GET /estimate and GET /presence. */
 export function serveEstimate(estimate: Estimate, presence: Presence = NOBODY) {

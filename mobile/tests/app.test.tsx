@@ -270,12 +270,20 @@ describe('matchmaking flow', () => {
       expect(await screen.findByText('Usually a few minutes')).toBeOnTheScreen();
     });
 
-    test('shows how many people are waiting and where they are, without naming them', async () => {
-      await open(UNKNOWN, { waiting: 3, people: [{ avatar: 11, region: 'JP' }, { avatar: 22, region: 'BR' }, { avatar: 33, region: 'JP' }] });
-      expect(await screen.findByText('3 people')).toBeOnTheScreen();
-      expect(screen.getAllByText('Japan').length).toBe(2);
+    test('shows who is online, how many are ready to match, and where they are, without naming them', async () => {
+      await open(UNKNOWN, {
+        online: 3,
+        waiting: 1,
+        people: [
+          { avatar: 11, region: 'JP', waiting: true },
+          { avatar: 22, region: 'BR', waiting: false },
+          { avatar: 33, region: 'JP', waiting: false },
+        ],
+      });
+      expect(await screen.findByText('3 online · 1 ready')).toBeOnTheScreen();
+      expect(screen.getByText('Japan · 2')).toBeOnTheScreen();
       expect(screen.getByText('Brazil')).toBeOnTheScreen();
-      expect(screen.getAllByText('🇯🇵').length).toBe(3); // the Japanese language chip, and a flag badge on each of the two people in Japan
+      expect(screen.getAllByText('🇯🇵').length).toBe(2); // the Japanese language chip, and one round flag for both people in Japan
     });
 
     test('asks again for the languages you pick', async () => {
@@ -285,7 +293,7 @@ describe('matchmaking flow', () => {
       await screen.findByText('Hi, Sam');
       await connect();
       await fireEvent.press(screen.getByRole('checkbox', { name: 'Hindi' }));
-      await waitFor(() => expect(fetchMock.mock.calls.some((c) => String(c[0]).includes('/presence?languages=english%2Chindi'))).toBe(true));
+      await waitFor(() => expect(fetchMock.mock.calls.some((c) => String(c[0]).includes('/presence?languages=english%2Chindi&user_id=u_test'))).toBe(true));
     });
   });
 

@@ -53,11 +53,11 @@ export function estimateBeforeJoining(e: Estimate | null, languages: string[], u
   return estimateLine(e);
 }
 
-/** Start screen: how many people are waiting who share a language. */
-export function presenceLine(waiting: number | null): string {
-  if (waiting === null) return 'Looking…';
-  if (waiting === 0) return 'Nobody yet';
-  return waiting === 1 ? '1 person' : `${waiting} people`;
+/** Start screen: who is online, and how many of them could be matched with you right now. */
+export function presenceLine(presence: { online: number; waiting: number } | null): string {
+  if (!presence) return 'Looking…';
+  if (presence.online === 0) return 'Nobody yet';
+  return presence.waiting > 0 ? `${presence.online} online · ${presence.waiting} ready` : `${presence.online} online`;
 }
 
 export function budgetLine(leftMs: number): string {
