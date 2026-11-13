@@ -1,0 +1,14 @@
+# Rust
+backend/target/
+
+# Video project working files (the rendered video is kept in docs/media)
+explainer-video/.hyperframes/
+explainer-video/node_modules/
+explainer-video/renders/
+explainer-video/*.mp4
+
+# Editors and OS
+.DS_Store
+
+# The take-home brief is not ours to publish
+docs/*.pdf
