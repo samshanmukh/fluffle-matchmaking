@@ -8,7 +8,9 @@ function resolve(): string {
   const fromEnv = process.env.EXPO_PUBLIC_SERVER_URL;
   if (fromEnv) return fromEnv.replace(/\/+$/, '');
   const host = Constants.expoConfig?.hostUri?.split(':')[0] ?? 'localhost';
-  return `http://${host}:8080`;
+  // Not "localhost": the server listens on IPv4 only, and on the iOS simulator a
+  // WebSocket opened by that name is dropped after a few seconds.
+  return `http://${host === 'localhost' ? '127.0.0.1' : host}:8080`;
 }
 
 export const HTTP_URL = resolve();

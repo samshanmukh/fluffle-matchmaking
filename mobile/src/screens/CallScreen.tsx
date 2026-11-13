@@ -1,80 +1,88 @@
+import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Avatar } from '../components/Avatar';
+import { BottomTray } from '../components/BottomTray';
 import { Button } from '../components/Button';
-import { Glass } from '../components/Glass';
+import { Card } from '../components/Card';
 import { Orb } from '../components/Orb';
-import { StatusPill } from '../components/StatusPill';
-import { clock, label, list } from '../copy';
+import { PressableScale } from '../components/PressableScale';
+import { RegionLink } from '../components/RegionLink';
+import { Header, Sheet, StatusLine } from '../components/Sheet';
+import { Tag } from '../components/Tag';
+import { clock, label } from '../copy';
+import { languageFlag } from '../regions';
 import type { CallView } from '../session/reducer';
-import { color, font, radius, space, type } from '../theme';
+import { color, space, type } from '../theme';
+import { starter, topicIcon } from '../topics';
 import { useNow } from '../useNow';
+import { useTapGuard } from '../useTapGuard';
 
 interface Props {
   view: CallView;
+  region: string | null;
   onEnd: () => void;
 }
 
-export function CallScreen({ view, onEnd }: Props) {
-  const insets = useSafeAreaInsets();
+export function CallScreen({ view, region, onEnd }: Props) {
   const now = useNow(500);
-  const time = clock(now - view.startedAt);
+  const guard = useTapGuard();
+  const [step, setStep] = useState(0);
   return (
-    <View style={[styles.root, { paddingTop: insets.top, paddingBottom: Math.max(insets.bottom, space.m) }]}>
-      <StatusPill label="On a call" />
-      <View style={styles.top}>
-        <Text style={styles.h1} accessibilityRole="header">
-          Talking with
-        </Text>
-        <Text style={styles.name} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.55}>
+    <View style={styles.root}>
+      <Header style={styles.header}>
+        <Text style={styles.name} accessibilityRole="header" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.55}>
           {view.partnerName}
         </Text>
-      </View>
+        <StatusLine label={`On a call · ${clock(now - view.startedAt)}`} />
+        <View style={styles.regions}>
+          <RegionLink mine={region} theirs={view.partnerRegion} />
+        </View>
+      </Header>
 
-      <View style={styles.middle}>
-        <Orb size={300} breathing>
-          <Text style={styles.time} accessibilityLabel={`Call time ${time}`} maxFontSizeMultiplier={1.1}>
-            {time}
+      <Sheet>
+        <View style={styles.middle}>
+          <Orb size={230} breathing>
+            <Avatar person={view.partnerId} size={98} />
+          </Orb>
+          <View style={styles.tags} accessibilityLabel={`Speaking ${view.languages.map(label).join(', ')}`}>
+            {view.languages.map((id) => (
+              <Tag key={id} label={label(id)} emoji={languageFlag(id)} />
+            ))}
+            <Tag icon={topicIcon(view.topic)} label={view.topic ? label(view.topic) : 'No set topic'} />
+          </View>
+        </View>
+
+        <Card style={styles.card}>
+          <Text style={styles.starterLabel}>Try asking</Text>
+          <Text style={styles.starter} accessibilityLiveRegion="polite">
+            {starter(view.topic, view.matchId, step)}
           </Text>
-        </Orb>
-      </View>
+          <PressableScale accessibilityRole="button" onPress={() => setStep((n) => n + 1)} style={styles.another} hitSlop={8}>
+            <Text style={styles.anotherLabel}>Another idea</Text>
+          </PressableScale>
+        </Card>
 
-      <View style={styles.bottom}>
-        <Glass style={styles.card}>
-          <View style={styles.row}>
-            <Text style={styles.rowLabel}>Speaking</Text>
-            <Text style={styles.rowValue}>{list(view.languages)}</Text>
-          </View>
-          <View style={styles.gap} />
-          <View style={styles.row}>
-            <Text style={styles.rowLabel}>Topic</Text>
-            <Text style={styles.rowValue}>{view.topic ? label(view.topic) : 'No agreed topic'}</Text>
-            {!view.topic && <Text style={styles.rowNote}>You didn't pick the same one, so talk about anything.</Text>}
-          </View>
-        </Glass>
-        <Glass round={radius.bar} strong style={styles.bar}>
-          <Button label="End call" icon="call" variant="ink" onPress={onEnd} />
-          <Text style={styles.note}>This prototype has no audio. This screen stands in for the call.</Text>
-        </Glass>
-      </View>
+        <BottomTray>
+          <Button label="End call" icon="call" variant="danger" onPress={guard(onEnd)} />
+          <Text style={styles.note}>Prototype: no audio.</Text>
+        </BottomTray>
+      </Sheet>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, paddingHorizontal: space.m },
-  top: { alignItems: 'center', paddingHorizontal: space.s, marginTop: space.s },
-  h1: { ...type.display, color: color.ink, textAlign: 'center' },
-  name: { ...type.display, fontFamily: font.regular, color: color.inkSoft, textAlign: 'center' },
-  middle: { flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: 150 },
-  time: { fontFamily: font.medium, fontSize: 42, lineHeight: 48, color: '#FFFFFF', fontVariant: ['tabular-nums'] },
-  bottom: { gap: space.s },
-  card: { padding: space.edge },
-  row: {},
-  gap: { height: space.l },
-  rowLabel: { ...type.small, color: color.inkSoft },
-  rowValue: { fontFamily: font.medium, fontSize: 26, lineHeight: 32, letterSpacing: -0.3, color: color.ink },
-  rowNote: { ...type.small, color: color.inkSoft, marginTop: 2 },
-  bar: { padding: space.m, gap: space.s },
-  note: { ...type.small, color: color.inkSoft, textAlign: 'center', paddingHorizontal: space.s, paddingBottom: space.xs },
+  root: { flex: 1 },
+  header: { alignItems: 'center' },
+  name: { ...type.display, color: color.onAccent, textAlign: 'center' },
+  regions: { marginTop: space.m, alignSelf: 'stretch' },
+  middle: { flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: 170 },
+  tags: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: space.s, marginTop: -space.m, paddingHorizontal: space.edge },
+  card: { marginHorizontal: space.edge, marginBottom: space.l, padding: space.l },
+  starterLabel: { ...type.small, color: color.inkSoft },
+  starter: { ...type.title, color: color.ink, marginTop: 2 },
+  another: { alignSelf: 'flex-start', minHeight: 32, justifyContent: 'center', marginTop: space.xs },
+  anotherLabel: { ...type.bodyStrong, color: color.accent },
+  note: { ...type.small, color: color.inkSoft, textAlign: 'center' },
 });

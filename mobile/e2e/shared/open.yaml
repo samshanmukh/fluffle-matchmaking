@@ -1,0 +1,19 @@
+# Opens the project fresh in Expo Go and waits until it is connected to the back end.
+appId: ${APP_ID}
+---
+# Restart Expo Go and bring it to the front before handing it the link: on Android a
+# link sent in the instant after a force-stop is sometimes dropped.
+- launchApp:
+    stopApp: true
+- openLink: ${APP_URL}
+# Expo Go shows its developer-menu introduction the first time a project opens on a device.
+- runFlow:
+    when:
+      visible: "Continue"
+    commands:
+      - tapOn:
+          text: "Continue"
+          retryTapIfNoChange: false
+- extendedWaitUntil:
+    visible: "Ready when you are"
+    timeout: 90000

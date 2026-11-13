@@ -77,10 +77,10 @@ export function Orb({ size, breathing = false, countdown, children }: Props) {
         <Svg width={size} height={size}>
           <Defs>
             <RadialGradient id="halo" cx="50%" cy="50%" r="50%">
-              <Stop offset="0" stopColor={color.accent} stopOpacity={0.95} />
-              <Stop offset="0.45" stopColor={color.accent} stopOpacity={0.6} />
-              <Stop offset="0.75" stopColor={color.accentWarm} stopOpacity={0.28} />
-              <Stop offset="1" stopColor={color.accentWarm} stopOpacity={0} />
+              <Stop offset="0" stopColor={color.accent} stopOpacity={0.55} />
+              <Stop offset="0.5" stopColor={color.accent} stopOpacity={0.28} />
+              <Stop offset="0.78" stopColor={color.accentLight} stopOpacity={0.12} />
+              <Stop offset="1" stopColor={color.accentLight} stopOpacity={0} />
             </RadialGradient>
           </Defs>
           <Circle cx={size / 2} cy={size / 2} r={size / 2} fill="url(#halo)" />
@@ -91,18 +91,18 @@ export function Orb({ size, breathing = false, countdown, children }: Props) {
         <Defs>
           <RadialGradient id="disc" cx="50%" cy="42%" r="60%">
             <Stop offset="0" stopColor={color.accent} stopOpacity={1} />
-            <Stop offset="1" stopColor={color.accentWarm} stopOpacity={1} />
+            <Stop offset="1" stopColor={color.accentLight} stopOpacity={1} />
           </RadialGradient>
         </Defs>
-        <Circle cx={size / 2} cy={size / 2} r={disc / 2} fill="url(#disc)" stroke="rgba(255,255,255,0.55)" strokeWidth={1.5} />
+        <Circle cx={size / 2} cy={size / 2} r={disc / 2} fill="url(#disc)" stroke="rgba(255,255,255,0.7)" strokeWidth={1.5} />
         {countdown && (
           <>
-            <Circle cx={size / 2} cy={size / 2} r={ringR} stroke="rgba(255,255,255,0.3)" strokeWidth={ringStroke} fill="none" />
+            <Circle cx={size / 2} cy={size / 2} r={ringR} stroke={color.tint} strokeWidth={ringStroke} fill="none" />
             <AnimatedCircle
               cx={size / 2}
               cy={size / 2}
               r={ringR}
-              stroke="#FFFFFF"
+              stroke={color.accent}
               strokeWidth={ringStroke}
               strokeLinecap="round"
               fill="none"

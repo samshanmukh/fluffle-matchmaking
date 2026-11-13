@@ -2,7 +2,7 @@
 //
 //   node scripts/partner.mjs                       # joins with English, says ready
 //   node scripts/partner.mjs --answer decline      # ready | decline | never | silent
-//   node scripts/partner.mjs --languages english,spanish --topic politics --name Bea
+//   node scripts/partner.mjs --languages english,spanish --topic politics --name Bea --region JP
 //
 // It talks to the same WebSocket the app does and prints every message.
 const args = Object.fromEntries(
@@ -15,8 +15,9 @@ const languages = (args.languages ?? 'english').split(',');
 const topic = args.topic ?? null;
 const answer = args.answer ?? 'ready';
 const delay = Number(args.delay ?? 2000);
+const region = args.region ?? 'BR'; // the flag the app shows for this person
 
-const ws = new WebSocket(`${server}/ws?user_id=${encodeURIComponent(id)}&name=${encodeURIComponent(name)}`);
+const ws = new WebSocket(`${server}/ws?user_id=${encodeURIComponent(id)}&name=${encodeURIComponent(name)}&region=${region}`);
 const send = (msg) => ws.send(JSON.stringify(msg));
 ws.onopen = () => setInterval(() => send({ type: 'ping' }), 10_000);
 ws.onerror = () => console.error(`could not reach ${server}`);

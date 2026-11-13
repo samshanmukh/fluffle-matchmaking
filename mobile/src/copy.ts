@@ -1,6 +1,6 @@
-// Every sentence the app says about waiting, in one place, so it can be read
-// (and argued with) without opening a screen. The rule: say what we know, say
-// what we do not know, never promise a match.
+// Every sentence the app says, in one place, so it can be read (and argued
+// with) without opening a screen. Two rules: say only what we know, and say
+// it in one short line.
 
 import type { Estimate, RequeueReason } from './session/protocol';
 import type { Notice } from './session/reducer';
@@ -30,98 +30,61 @@ export function minutes(ms: number): string {
   return m === 1 ? '1 minute' : `${m} minutes`;
 }
 
-function basis(e: Estimate): string {
-  return e.sample_size === 1 ? 'Based on 1 recent match.' : `Based on ${e.sample_size} recent matches.`;
-}
-
-export interface EstimateCopy {
-  headline: string;
-  detail: string;
-}
-
-/** Start screen, before joining. */
-export function estimateBeforeJoining(e: Estimate | null, languages: string[], unreachable: boolean): EstimateCopy {
-  if (languages.length === 0) return { headline: 'Pick a language to see the wait', detail: 'You can choose up to five.' };
-  if (unreachable) return { headline: 'Wait time unavailable', detail: "We can't reach Fluffle right now." };
-  if (!e) return { headline: 'Checking the wait', detail: ' ' };
-  if (e.someone_waiting) {
-    return {
-      headline: 'Likely under a minute',
-      detail: `Someone who speaks ${list(languages, 'or')} is waiting right now.`,
-    };
-  }
+/** The wait estimate as one line. With too little data it says so; it never invents a number. */
+export function estimateLine(e: Estimate | null, opts: { waiting?: boolean } = {}): string {
+  if (!e) return 'Checking the wait';
+  if (e.someone_waiting && !opts.waiting) return 'Likely under a minute';
   switch (e.bucket) {
     case 'under_a_minute':
-      return { headline: 'Usually under a minute', detail: basis(e) };
+      return 'Usually under a minute';
     case 'a_few_minutes':
-      return { headline: 'Usually a few minutes', detail: basis(e) };
+      return 'Usually a few minutes';
     case 'over_five_minutes':
-      return { headline: 'May take over five minutes', detail: basis(e) };
+      return 'May take over five minutes';
     case 'unknown':
-      return {
-        headline: 'No estimate yet',
-        detail: 'Nobody is waiting in these languages, and there are too few recent matches to guess.',
-      };
+      return 'No wait estimate yet';
   }
 }
 
-/** Waiting screen. The server never reports a bucket the person has already outlasted. */
-export function estimateWhileWaiting(e: Estimate | null): EstimateCopy {
-  if (!e) return { headline: 'Updating the estimate', detail: ' ' };
-  switch (e.bucket) {
-    case 'under_a_minute':
-      return { headline: 'Usually under a minute', detail: basis(e) };
-    case 'a_few_minutes':
-      return { headline: 'Usually a few minutes', detail: basis(e) };
-    case 'over_five_minutes':
-      return { headline: 'This may take over five minutes', detail: basis(e) };
-    case 'unknown':
-      return {
-        headline: "We can't estimate this wait",
-        detail: 'There are too few recent matches in your languages to give an honest number.',
-      };
-  }
+/** Start screen: the line under "Find a match". */
+export function estimateBeforeJoining(e: Estimate | null, languages: string[], unreachable: boolean): string {
+  if (languages.length === 0) return 'Pick a language first';
+  if (unreachable) return "Can't check the wait";
+  return estimateLine(e);
+}
+
+/** Start screen: how many people are waiting who share a language. */
+export function presenceLine(waiting: number | null): string {
+  if (waiting === null) return 'Looking…';
+  if (waiting === 0) return 'Nobody yet';
+  return waiting === 1 ? '1 person' : `${waiting} people`;
+}
+
+export function budgetLine(leftMs: number): string {
+  return leftMs > 0 ? `We'll look for up to ${minutes(leftMs)} more.` : 'Wrapping up.';
 }
 
 export function requeueLine(reason: RequeueReason, partnerName: string): string {
   return reason === 'partner_declined'
-    ? `${partnerName} passed this time. You kept your place at the front.`
-    : `${partnerName} didn't answer in time. You kept your place at the front.`;
+    ? `${partnerName} skipped. You're still first in line.`
+    : `${partnerName} didn't answer. You're still first in line.`;
 }
 
 export function noticeCopy(n: Notice): { title: string; body: string } {
   switch (n.kind) {
     case 'wait_timeout':
-      return {
-        title: 'No match this time',
-        body: `Nobody who fits was free in ${minutes(n.budgetMs)}, so we stopped looking. Your choices are still here if you want to try again.`,
-      };
+      return { title: 'No one was free', body: `We looked for ${minutes(n.budgetMs)}. Try again any time.` };
     case 'offer_timeout':
-      return {
-        title: 'You missed the match',
-        body: `${n.partnerName ?? 'Your match'} was ready to be asked, but the offer ran out before you answered, so we took you out of the queue.`,
-      };
+      return { title: 'You missed that match', body: "You didn't answer in time, so you left the queue." };
     case 'declined':
       return n.neverAgain
-        ? {
-            title: `You won't be matched with ${n.partnerName ?? 'them'} again`,
-            body: 'You are out of the queue. Start a new search whenever you like.',
-          }
-        : {
-            title: 'You passed on that match',
-            body: 'Passing takes you out of the queue. Start a new search whenever you like.',
-          };
+        ? { title: 'Got it', body: `You won't be matched with ${n.partnerName ?? 'them'} again.` }
+        : { title: 'Skipped', body: 'You left the queue.' };
     case 'partner_ended_call':
-      return { title: `${n.partnerName} ended the call`, body: 'Start a new search whenever you like.' };
+      return { title: `${n.partnerName} ended the call`, body: '' };
     case 'connection_lost':
-      return {
-        title: 'Connection lost',
-        body:
-          n.during === 'call'
-            ? 'The connection dropped, so the call ended.'
-            : 'The connection dropped, so you are no longer in the queue.',
-      };
+      return { title: 'Connection lost', body: n.during === 'call' ? 'The call ended.' : 'You left the queue.' };
     case 'error':
-      return { title: "That didn't work", body: label(n.message) };
+      return { title: "That didn't work", body: `${n.message[0]?.toUpperCase() ?? ''}${n.message.slice(1)}.` };
   }
 }

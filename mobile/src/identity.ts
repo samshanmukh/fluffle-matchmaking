@@ -1,11 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { deviceRegion } from './regions';
+
 // Sign-up is out of scope, so each install invents an identity once and keeps
 // it. It has to be stable: "don't match me again" is stored against this id.
 
 export interface Identity {
   id: string;
   name: string;
+  /** Country code shown to a match as a flag. Read from the phone's region setting at launch; not stored, not editable. */
+  region: string | null;
 }
 
 const KEY = 'fluffle.identity.v1';
@@ -14,7 +18,7 @@ export const MAX_NAME = 20;
 
 function invent(): Identity {
   const id = `u_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
-  return { id, name: NAMES[Math.floor(Math.random() * NAMES.length)] };
+  return { id, name: NAMES[Math.floor(Math.random() * NAMES.length)], region: deviceRegion() };
 }
 
 export async function loadIdentity(): Promise<Identity> {
@@ -22,7 +26,9 @@ export async function loadIdentity(): Promise<Identity> {
     const raw = await AsyncStorage.getItem(KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<Identity>;
-      if (typeof parsed.id === 'string' && typeof parsed.name === 'string') return { id: parsed.id, name: parsed.name };
+      if (typeof parsed.id === 'string' && typeof parsed.name === 'string') {
+        return { id: parsed.id, name: parsed.name, region: deviceRegion() };
+      }
     }
   } catch {
     // Unreadable storage: fall through to a fresh identity.
@@ -34,7 +40,7 @@ export async function loadIdentity(): Promise<Identity> {
 
 export async function saveIdentity(identity: Identity): Promise<void> {
   try {
-    await AsyncStorage.setItem(KEY, JSON.stringify(identity));
+    await AsyncStorage.setItem(KEY, JSON.stringify({ id: identity.id, name: identity.name }));
   } catch {
     // Not fatal: the identity still works for this launch.
   }

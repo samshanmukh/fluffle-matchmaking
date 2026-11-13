@@ -16,8 +16,8 @@ export function PressableScale({ style, children, disabled, onPressIn, onPressOu
   const reduced = useReducedMotion();
   const pressed = useSharedValue(0);
   const animated = useAnimatedStyle(() => ({
-    transform: [{ scale: reduced ? 1 : 1 - 0.03 * pressed.get() }],
-    opacity: 1 - 0.12 * pressed.get(),
+    // Scale only: opacity belongs to the caller (disabled controls dim themselves).
+    transform: [{ scale: 1 - (reduced ? 0.01 : 0.03) * pressed.get() }],
   }));
   return (
     <AnimatedPressable

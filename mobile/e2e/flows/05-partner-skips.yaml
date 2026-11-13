@@ -1,0 +1,23 @@
+# partner: --answer decline --delay 5000
+# You say ready, they skip: you go back to waiting and are told you kept your place.
+appId: ${APP_ID}
+---
+- runFlow: ../shared/open.yaml
+- tapOn:
+    text: "Find a match"
+    retryTapIfNoChange: false
+- extendedWaitUntil:
+    visible: "Say hi to"
+    timeout: 20000
+- tapOn:
+    text: "I'm ready"
+    retryTapIfNoChange: false
+- extendedWaitUntil:
+    visible: ".*still first in line.*"
+    timeout: 15000
+- assertVisible: "Finding you someone"
+- takeScreenshot: 05-back-in-queue
+- tapOn:
+    text: "Stop looking"
+    retryTapIfNoChange: false
+- assertVisible: "Find a match"
