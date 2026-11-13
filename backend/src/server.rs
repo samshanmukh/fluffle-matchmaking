@@ -5,7 +5,7 @@
 //! talk at once. Each connection has its own outbound queue, so a slow phone
 //! never blocks the engine.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -234,8 +234,17 @@ async fn presence(State(shared): State<Shared>, Query(q): Query<PresenceQuery>) 
     let hub = shared.lock().unwrap();
 
     let ready: Vec<String> = hub.engine.waiting_sharing(&languages).into_iter().filter(|u| Some(u.as_str()) != me).collect();
-    let mut others: Vec<&String> = hub.conns.keys().filter(|u| Some(u.as_str()) != me && !ready.contains(*u)).collect();
-    others.sort_unstable(); // a stable order, so the list does not shuffle between polls
+    let ready_set: HashSet<&str> = ready.iter().map(String::as_str).collect();
+    let mut others: Vec<&String> = hub.conns.keys().filter(|u| Some(u.as_str()) != me && !ready_set.contains(u.as_str())).collect();
+    let online = ready.len() + others.len();
+    // Only the first few are described, so only they need ordering: a stable
+    // order (by id), so the list does not shuffle between polls.
+    let shown = PRESENCE_LIMIT.saturating_sub(ready.len()).min(others.len());
+    if shown < others.len() {
+        others.select_nth_unstable(shown);
+        others.truncate(shown);
+    }
+    others.sort_unstable();
 
     let person = |user: &String, waiting: bool| json!({ "avatar": avatar_code(user), "region": hub.regions.get(user), "waiting": waiting });
     let people: Vec<Value> = ready
@@ -244,7 +253,7 @@ async fn presence(State(shared): State<Shared>, Query(q): Query<PresenceQuery>) 
         .chain(others.iter().map(|u| person(u, false)))
         .take(PRESENCE_LIMIT)
         .collect();
-    Json(json!({ "online": ready.len() + others.len(), "waiting": ready.len(), "people": people }))
+    Json(json!({ "online": online, "waiting": ready.len(), "people": people }))
 }
 
 async fn stats(State(shared): State<Shared>) -> impl IntoResponse {
@@ -323,6 +332,9 @@ async fn client(socket: WebSocket, shared: Shared, q: ConnQuery, heartbeat: Dura
         let mut hub = shared.lock().unwrap();
         if hub.conns.get(&user).map(|c| c.id) == Some(conn_id) {
             hub.conns.remove(&user);
+            // Nothing is shown about someone who is gone, and the maps must not grow for ever.
+            hub.names.remove(&user);
+            hub.regions.remove(&user);
             let now = hub.now();
             let events = hub.engine.leave(&user, now);
             hub.dispatch(events);
