@@ -336,6 +336,23 @@ impl Engine {
         self.estimate_before_joining(&langs, now)
     }
 
+    /// Who is waiting right now and shares at least one of these languages,
+    /// longest wait first. For the start screen's "who's here" display; people
+    /// in an offer or a call are not listed, because they cannot be matched.
+    pub fn waiting_sharing(&self, languages: &[String]) -> Vec<String> {
+        let wanted: HashSet<LangId> = languages.iter().filter_map(|l| self.langs.get(&normalize(l))).collect();
+        let mut found: Vec<(Ms, u64, Uid)> = self
+            .slots
+            .values()
+            .filter_map(|s| match s {
+                Slot::Waiting(w) if w.cand.langs.iter().any(|l| wanted.contains(l)) => Some((w.cand.seniority, w.cand.seq, w.cand.uid)),
+                _ => None,
+            })
+            .collect();
+        found.sort_unstable();
+        found.into_iter().map(|(_, _, uid)| self.users.name(uid).to_string()).collect()
+    }
+
     /// Checks the properties the brief asks for: nobody is in two places, and
     /// every offer and call refers to people who know they are in it.
     pub fn check_invariants(&self) -> Result<(), String> {
