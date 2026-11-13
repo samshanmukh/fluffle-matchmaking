@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
   linkDot: { width: 8, height: 8, borderRadius: 4 },
   linkLabel: { ...font.medium, fontSize: 13, lineHeight: 18, color: color.onAccent },
   h1Lead: { ...font.regular, fontSize: 19, lineHeight: 24, color: color.onAccentSoft, marginTop: space.l },
-  h1: { ...type.display, color: color.onAccent, textDecorationLine: 'underline' },
+  h1: { ...type.display, color: color.onAccent },
   hereHead: { flexDirection: 'row', alignItems: 'baseline', gap: space.s, marginTop: space.l },
   hereLabel: { ...font.medium, fontSize: 15, lineHeight: 20, color: color.onAccent },
   hereCount: { ...font.regular, fontSize: 15, lineHeight: 20, color: color.onAccentSoft },
