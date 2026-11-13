@@ -15,7 +15,6 @@ jest.mock('expo-haptics', () => ({
   ImpactFeedbackStyle: { Light: 'light', Medium: 'medium', Heavy: 'heavy' },
 }));
 jest.mock('expo-localization', () => ({ getLocales: () => [{ regionCode: 'US', languageCode: 'en' }] }));
-jest.mock('expo-blur', () => ({ BlurView: require('react-native').View }));
 jest.mock('@expo/vector-icons', () => ({ Ionicons: () => null }));
 jest.mock('@expo-google-fonts/outfit', () => ({
   useFonts: () => [true, null],

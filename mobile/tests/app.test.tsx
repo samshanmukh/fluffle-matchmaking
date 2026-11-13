@@ -282,8 +282,9 @@ describe('matchmaking flow', () => {
       });
       expect(await screen.findByText('3 online · 1 ready')).toBeOnTheScreen();
       expect(screen.queryByText('Japan')).toBeNull(); // no country list: the flag is a badge on each avatar
-      expect(screen.getAllByText('🇯🇵').length).toBe(3); // the Japanese language chip, and a badge on each of the two people in Japan
-      expect(screen.getByText('🇧🇷')).toBeOnTheScreen();
+      // Avatars are decorative for screen readers, so their flag badges are only found when hidden elements are included.
+      expect(screen.getAllByText('🇯🇵', { includeHiddenElements: true }).length).toBe(3); // the language chip, and a badge on each of the two people in Japan
+      expect(screen.getByText('🇧🇷', { includeHiddenElements: true })).toBeOnTheScreen();
     });
 
     test('asks again for the languages you pick', async () => {
