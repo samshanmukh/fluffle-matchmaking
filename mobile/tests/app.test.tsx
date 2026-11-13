@@ -270,7 +270,7 @@ describe('matchmaking flow', () => {
       expect(await screen.findByText('Usually a few minutes')).toBeOnTheScreen();
     });
 
-    test('shows who is online, how many are ready to match, and where they are, without naming them', async () => {
+    test('shows who is online and how many are ready to match, without naming them', async () => {
       await open(UNKNOWN, {
         online: 3,
         waiting: 1,
@@ -281,9 +281,9 @@ describe('matchmaking flow', () => {
         ],
       });
       expect(await screen.findByText('3 online · 1 ready')).toBeOnTheScreen();
-      expect(screen.getByText('Japan · 2')).toBeOnTheScreen();
-      expect(screen.getByText('Brazil')).toBeOnTheScreen();
-      expect(screen.getAllByText('🇯🇵').length).toBe(2); // the Japanese language chip, and one round flag for both people in Japan
+      expect(screen.queryByText('Japan')).toBeNull(); // no country list: the flag is a badge on each avatar
+      expect(screen.getAllByText('🇯🇵').length).toBe(3); // the Japanese language chip, and a badge on each of the two people in Japan
+      expect(screen.getByText('🇧🇷')).toBeOnTheScreen();
     });
 
     test('asks again for the languages you pick', async () => {
