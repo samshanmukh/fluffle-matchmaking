@@ -78,6 +78,22 @@ test('losing the connection never leaves a stale wait or call on screen', () => 
   assert.deepEqual(s.view.kind === 'start' && s.view.notice, { kind: 'connection_lost', during: 'waiting' });
 });
 
+test('a new socket clears a join that the old socket never finished', () => {
+  // Renaming reconnects the socket without ever reporting "offline".
+  const hello: ServerMsg = { type: 'hello', user_id: 'u_a', state: { phase: 'idle' }, offer_window_ms: 15_000, wait_budget_ms: 600_000 };
+  let s = reduce(initialState, { type: 'join_sent' });
+  assert.equal(s.view.kind === 'start' && s.view.joining, true);
+  s = feed(s, 2_000, hello);
+  assert.equal(s.link, 'online');
+  assert.equal(s.view.kind === 'start' && s.view.joining, false, 'the button must not stay on "Joining"');
+
+  // The same silent reconnect during a wait: the server has dropped the place.
+  let w = feed(initialState, 1_000, joined);
+  w = feed(w, 3_000, hello);
+  assert.equal(w.view.kind, 'start');
+  assert.deepEqual(w.view.kind === 'start' && w.view.notice, { kind: 'connection_lost', during: 'waiting' });
+});
+
 test('partner leaving the call is explained; a stale call_ended is ignored', () => {
   const started: ServerMsg = { type: 'call_started', match_id: 7, partner: 'u_b', partner_name: 'Bea', languages: ['english'], topic: 'sports' };
   let s = feed(initialState, 0, joined, offer, started);

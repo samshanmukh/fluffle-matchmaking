@@ -21,6 +21,11 @@ interface Countdown {
   startFraction: number;
   /** Milliseconds until it is empty. */
   remainingMs: number;
+  /**
+   * The user has answered, so the ring is dimmed. It deliberately keeps
+   * draining: the offer still expires at the same moment for the partner, and
+   * a ring that stopped would show time the offer does not have.
+   */
   frozen: boolean;
 }
 

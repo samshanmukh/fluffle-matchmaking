@@ -120,8 +120,15 @@ function onLink(state: State, link: Link): State {
 function onServer(state: State, msg: ServerMsg, now: number): State {
   const v = state.view;
   switch (msg.type) {
-    case 'hello':
-      return { ...state, link: 'online', waitBudgetMs: msg.wait_budget_ms, offerWindowMs: msg.offer_window_ms };
+    case 'hello': {
+      // A new socket starts from nothing: the server dropped whatever the old
+      // one held (a join in flight, a wait, an offer, a call). Apply the same
+      // reset as losing the connection, so no screen or "Joining" button
+      // outlives the socket that owned it. This covers reconnects that never
+      // report "offline", such as the reconnect after a name change.
+      const reset = onLink(state, 'offline').view;
+      return { ...state, link: 'online', waitBudgetMs: msg.wait_budget_ms, offerWindowMs: msg.offer_window_ms, view: reset };
+    }
 
     case 'joined':
       return {
