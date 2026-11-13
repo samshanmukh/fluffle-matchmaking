@@ -118,7 +118,12 @@ pub fn run(scenario: &Scenario) -> Report {
                 *last = events;
                 StepResult { at: now, text, check: None }
             }
-            Err(e) => StepResult { at: now, text, check: Some(Err(e)) },
+            Err(e) => {
+                // A failed command produced nothing: later expectations must
+                // not be judged against the previous command's events.
+                last.clear();
+                StepResult { at: now, text, check: Some(Err(e)) }
+            }
         };
         let result = match &step.action {
             Action::Join { user, languages, topic } => {
@@ -211,6 +216,8 @@ pub fn run(scenario: &Scenario) -> Report {
         steps.push(result);
         if let Err(problem) = engine.check_invariants() {
             steps.push(StepResult { at: now, text: "engine invariants".to_string(), check: Some(Err(problem)) });
+            // The engine is inconsistent; driving it further proves nothing.
+            break;
         }
     }
     Report { name: scenario.name.clone(), description: scenario.description.clone(), steps }

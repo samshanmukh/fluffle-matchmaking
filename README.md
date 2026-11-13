@@ -45,7 +45,7 @@ All settings are listed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#configura
 
 ## Run the tests
 
-Everything (53 tests: ranking rules, offer outcomes, randomised property tests, real-WebSocket tests, scripted scenarios):
+Everything (56 tests: ranking rules, offer outcomes, randomised property tests, real-WebSocket tests, scripted scenarios):
 
 ```bash
 cd backend && cargo test

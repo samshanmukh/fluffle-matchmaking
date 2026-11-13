@@ -73,16 +73,15 @@ fn a_decline_removes_the_decliner_and_requeues_the_other_at_once() {
 
 #[test]
 fn the_requeued_person_keeps_their_place_at_the_front() {
-    let mut e = offered(); // ana has been here since t=0
+    let mut e = offered(); // ana has been here since t=0, and is answering an offer with ben
+    // Two people arrive while ana is busy. No pass runs, so both are still waiting.
     join(&mut e, "carl", &["en"], Some("sports"), 2_000);
-    join(&mut e, "dana", &["en"], Some("sports"), 2_500);
-    assert_eq!(pairs(&e.tick(3_000)), ["carl+dana"], "ana and ben are still answering");
-    decline(&mut e, "carl", false, 3_500); // dana is requeued
-    decline(&mut e, "ben", false, 4_000); // ana is requeued
-    join(&mut e, "erin", &["en"], Some("sports"), 4_500);
-    // ana (t=0) is ahead of dana (t=2500) and erin (t=4500).
-    assert_eq!(pairs(&e.tick(5_000)), ["ana+dana"]);
-    assert_eq!(e.phase("erin"), Phase::Waiting);
+    join(&mut e, "dana", &["en"], Some("sports"), 3_000);
+    decline(&mut e, "ben", false, 4_000); // ana is requeued at t=4000
+    // With her place kept (t=0) ana is first and pairs with carl, the next longest waiter.
+    // Had requeueing reset her place to t=4000, carl and dana would pair and ana would wait.
+    assert_eq!(pairs(&e.tick(5_000)), ["ana+carl"]);
+    assert_eq!(e.phase("dana"), Phase::Waiting);
 }
 
 #[test]
@@ -301,6 +300,34 @@ fn the_estimate_is_the_median_of_recent_real_waits_once_there_are_enough() {
     assert_eq!(est.bucket, Bucket::AFewMinutes);
     assert_eq!(est.sample_size, 4);
     assert_eq!(e.estimate(&langs(&["fr"]), 400_000).bucket, Bucket::Unknown, "other languages have no data");
+}
+
+#[test]
+fn a_match_in_two_languages_counts_each_persons_wait_once() {
+    let mut e = engine();
+    join(&mut e, "ana", &["en", "es"], None, 0);
+    join(&mut e, "ben", &["en", "es"], None, 0);
+    e.tick(10_000);
+    ready(&mut e, "ana", 10_000);
+    ready(&mut e, "ben", 10_000);
+    // One call, two people: two samples, even when asking about both languages.
+    let est = e.estimate(&langs(&["en", "es"]), 20_000);
+    assert_eq!(est.sample_size, 2);
+    assert_eq!(est.bucket, Bucket::Unknown, "one match is not enough to quote a wait");
+}
+
+#[test]
+fn other_peoples_calls_do_not_trigger_estimate_messages_unless_the_bucket_changes() {
+    let mut e = engine();
+    complete_a_match(&mut e, "m1", "en", 0, 10_000);
+    complete_a_match(&mut e, "m2", "en", 20_000, 10_000);
+    e.block("zoe", "m3-a", 0).unwrap();
+    e.block("zoe", "m3-b", 0).unwrap();
+    e.join("zoe", &langs(&["en"]), None, 40_000).unwrap(); // told "under a minute" on joining
+    // Another quick match completes: more samples, same bucket.
+    complete_a_match(&mut e, "m3", "en", 41_000, 5_000);
+    let events = e.tick(47_000);
+    assert!(events.iter().all(|ev| ev.user != "zoe"), "zoe was messaged although nothing she sees changed: {events:?}");
 }
 
 #[test]

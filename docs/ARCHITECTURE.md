@@ -109,7 +109,7 @@ Connect to `/ws?user_id=<id>&name=<display name>`. All messages are JSON with a 
 
 | `type` | Fields | Meaning |
 |---|---|---|
-| `hello` | `user_id`, `state`, `offer_window_ms`, `wait_budget_ms` | Sent on connect |
+| `hello` | `user_id`, `state`, `offer_window_ms`, `wait_budget_ms` | Sent on connect. `state` is `{ "phase": "idle" \| "waiting" }` or `{ "phase": "offered" \| "in_call", "match_id": n }` |
 | `joined` | `estimate`, `wait_budget_ms` | In the queue |
 | `estimate` | `estimate` | The bucket changed while waiting |
 | `offer` | `match_id`, `partner`, `partner_name`, `languages`, `topic`, `expires_in_ms` | Both people get this together |
@@ -123,6 +123,10 @@ Connect to `/ws?user_id=<id>&name=<display name>`. All messages are JSON with a 
 | `pong` | | |
 
 `estimate` is `{ "bucket": "under_a_minute" | "a_few_minutes" | "over_five_minutes" | "unknown", "sample_size": n, "someone_waiting": bool }`.
+
+Each connection has an outbound queue of 256 messages. A client that stops reading until it fills is disconnected, which frees its place like any other dropped connection.
+
+There is no authentication: `user_id` is whatever the client sends, because sign-up and login are out of scope for the prototype. Anyone who knows a `user_id` can connect as that user.
 
 An `error` with code `no_such_offer` is normal under network delay: the answer arrived after the partner had already declined. Clients should ignore it.
 
@@ -154,11 +158,12 @@ Environment variables read by the server binary:
 | Suite | What it proves | Tests |
 |---|---|---|
 | `ranking.rs` | Eligibility and each ranking rule, one test per rule | 18 |
-| `offers.rs` | Every offer outcome, budgets, cooldowns, the estimate rule | 24 |
+| `offers.rs` | Every offer outcome, budgets, cooldowns, the estimate rule | 26 |
 | `properties.rs` | 2,000 random queues: indexed selection equals the reference. 1,500 random command sequences: nobody in two places, nobody dropped silently, no blocked pair offered | 2 |
-| `network.rs` | The full flow over WebSockets, disconnects, heartbeat, 100 people joining at once | 8 |
+| `network.rs` | The full flow over WebSockets, disconnects, heartbeat, a client that never reads, 100 people joining at once | 9 |
 | `scenarios.rs` | All scripted scenarios pass | 1 |
 
 ## Change log
 
 - **2026-11-12** Engine, server, scenario runner, load tester and all test suites built. A property test found that blocking someone during an open offer left the offer open; fixed so the block closes it.
+- **2026-11-13** Fixes from code review on PR 1. The outbound queue per connection is now bounded. A wait is counted once per person per call, not once per shared language. Estimate updates are sent only when the bucket changes. The scenario runner clears stale events after a failed command and stops on an invariant failure. The requeue-seniority test was rewritten because the old one passed whether or not seniority was kept. `PORT` is validated.
