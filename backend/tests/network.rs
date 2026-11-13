@@ -203,13 +203,18 @@ async fn the_start_screen_can_ask_for_an_estimate_over_http() {
     ana.join(&["es"], None).await;
     assert!(get("/estimate?languages=en,es").await.contains("\"bucket\":\"under_a_minute\""));
 
-    // The "who's here" list: a count, an avatar code and a region; never a name or an id.
+    // The "who's online" list: counts, an avatar code, a region and a waiting flag; never a name or an id.
     let here = get("/presence?languages=en,es").await;
-    assert!(here.contains("\"waiting\":1"), "{here}");
-    assert!(here.contains("\"avatar\":"), "{here}");
+    assert!(here.contains("\"online\":1") && here.contains("\"waiting\":1"), "{here}");
+    assert!(here.contains("\"avatar\":") && here.contains("\"waiting\":true"), "{here}");
     assert!(!here.contains("ana") && !here.contains("ben"), "{here}");
-    assert!(get("/presence?languages=klingon").await.contains("\"waiting\":0"));
-    assert!(get("/health").await.ends_with("ok"));
+
+    // Someone online who does not share a language is still listed, but not as ready to match.
+    let other = get("/presence?languages=klingon").await;
+    assert!(other.contains("\"online\":1") && other.contains("\"waiting\":0") && other.contains("\"waiting\":false"), "{other}");
+
+    // You are never listed to yourself.
+    assert!(get("/presence?languages=es&user_id=ana").await.contains("\"online\":0"));
 }
 
 #[tokio::test]

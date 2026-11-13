@@ -135,7 +135,7 @@ An `error` with code `no_such_offer` is normal under network delay: the answer a
 | Route | Returns |
 |---|---|
 | `GET /estimate?languages=english,spanish` | The pre-join estimate |
-| `GET /presence?languages=english,spanish` | Who is waiting now and shares a language: a count, plus an avatar code and region for the first 12. No names or ids |
+| `GET /presence?languages=english,spanish&user_id=<id>` | Who is online now (excluding `user_id`): `online`, `waiting` (those in the queue who share a language), and for the first 12 an avatar code, region and `waiting` flag. No names or ids |
 | `GET /stats` | Counts of people waiting, open offers, calls, connections |
 | `GET /health` | `ok` |
 
