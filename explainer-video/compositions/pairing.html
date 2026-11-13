@@ -1,0 +1,595 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      font-family: Inter, sans-serif;
+      color: var(--ink);
+    }
+
+    /* ---------- header ---------- */
+    .hdr-in {
+      position: absolute;
+      left: 194px;
+      top: 104px;
+      width: 1532px;
+    }
+    .kicker {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--accent);
+      line-height: 36px;
+    }
+    .head {
+      margin-top: 6px;
+      font-size: 48px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      line-height: 58px;
+      white-space: nowrap;
+    }
+    .sub {
+      margin-top: 6px;
+      font-size: 30px;
+      font-weight: 400;
+      line-height: 40px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .w {
+      display: inline-block;
+    }
+
+    /* ---------- people ---------- */
+    .card {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 200px;
+      height: 250px;
+      padding: 14px;
+      background: var(--card);
+      border: 2px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 6px 0 rgba(28, 27, 25, 0.06);
+    }
+    .who {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 44px;
+    }
+    .av {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 44px;
+      text-align: center;
+      flex: none;
+    }
+    .nm {
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .chips {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+      height: 40px;
+    }
+    .chip {
+      height: 40px;
+      padding: 0 11px;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 40px;
+    }
+    .en {
+      background: var(--en);
+    }
+    .es {
+      background: var(--es);
+    }
+    .fr {
+      background: var(--fr);
+    }
+    .topic {
+      margin-top: 8px;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 34px;
+      transform-origin: 0 50%;
+    }
+    .topic.none {
+      font-weight: 400;
+      color: var(--muted);
+    }
+    .wait {
+      font-size: 28px;
+      line-height: 34px;
+      color: var(--muted);
+    }
+    .status {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 10px;
+      height: 38px;
+      border-radius: 10px;
+      background: var(--ready);
+      color: #fff;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 38px;
+      text-align: center;
+    }
+    .status.no {
+      background: var(--declined);
+    }
+
+    /* ---------- exact-set groups ---------- */
+    .frame {
+      position: absolute;
+      top: 316px;
+      height: 274px;
+      border: 3px dashed var(--line);
+      border-radius: 26px;
+    }
+    .glabel {
+      position: absolute;
+      top: 272px;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 36px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .glabel.hot {
+      color: var(--accent);
+    }
+
+    /* ---------- pairs ---------- */
+    .reason,
+    .call {
+      position: absolute;
+      width: 408px;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .reason {
+      top: 604px;
+      height: 42px;
+    }
+    .reason span {
+      display: inline-block;
+      height: 42px;
+      padding: 0 16px;
+      border-radius: 21px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 42px;
+    }
+    .call {
+      top: 920px;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 36px;
+    }
+    .call.live {
+      color: var(--ready);
+    }
+
+    /* ---------- overlap connectors ---------- */
+    .conn {
+      position: absolute;
+      top: 414px;
+      width: 176px;
+      text-align: center;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 36px;
+    }
+    .conn i {
+      display: block;
+      margin-top: 6px;
+      height: 6px;
+      border-radius: 3px;
+    }
+    /* corner panel: the data structure or algorithm behind the current step */
+    .algo-box {
+      position: absolute;
+      right: 194px;
+      top: 100px;
+      height: 42px;
+      display: flex;
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--ink);
+      color: #fff;
+      font-size: 28px;
+      line-height: 42px;
+      white-space: nowrap;
+    }
+    .algo-tag {
+      padding: 0 12px;
+      background: var(--accent);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .algo-txt {
+      padding: 0 14px;
+    }
+  </style>
+
+  <div id="root" data-composition-id="pairing" data-width="1920" data-height="1080">
+    <!-- headers: one on screen at a time -->
+    <div id="h0" class="clip" data-start="0" data-duration="4.5" data-track-index="2">
+      <div class="hdr-in" id="h0-in">
+        <div class="kicker">One pass of the pairing engine</div>
+        <div class="head">Seven people are waiting to talk.</div>
+        <div class="sub">Each chose languages and maybe a topic. The engine runs once a second.</div>
+      </div>
+    </div>
+    <div id="h1" class="clip" data-start="4.5" data-duration="5" data-track-index="2">
+      <div class="hdr-in" id="h1-in">
+        <div class="kicker">Step 1</div>
+        <div class="head">Group people who chose exactly the same languages.</div>
+        <div class="sub">Exact matches are always tried first.</div>
+      </div>
+    </div>
+    <div id="h2" class="clip" data-start="9.5" data-duration="5" data-track-index="2">
+      <div class="hdr-in" id="h2-in">
+        <div class="kicker">Step 2</div>
+        <div class="head">A partner asked for English + Spanish. That pair goes first.</div>
+        <div class="sub">Chloe and Dev picked different topics, so the call has no set topic.</div>
+      </div>
+    </div>
+    <div id="h3" class="clip" data-start="14.5" data-duration="5.5" data-track-index="2">
+      <div class="hdr-in" id="h3-in">
+        <div class="kicker">Step 2</div>
+        <div class="head">Next, a shared topic beats a longer wait.</div>
+        <div class="sub">Finn has waited longest, but he picked no topic.</div>
+      </div>
+    </div>
+    <div id="h4" class="clip" data-start="20" data-duration="3" data-track-index="2">
+      <div class="hdr-in" id="h4-in">
+        <div class="kicker">Step 3</div>
+        <div class="head">People left over can pair on any shared language.</div>
+        <div class="sub">Emi shares English with Finn and French with Gus.</div>
+      </div>
+    </div>
+    <div id="h5" class="clip" data-start="23" data-duration="4.5" data-track-index="2">
+      <div class="hdr-in" id="h5-in">
+        <div class="kicker">Step 3</div>
+        <div class="head">Emi fits both, so the longer wait wins: Finn, 60 seconds.</div>
+        <div class="sub">Gus keeps his place. The next pass runs one second later.</div>
+      </div>
+    </div>
+    <div id="h6" class="clip" data-start="27.5" data-duration="3.5" data-track-index="2">
+      <div class="hdr-in" id="h6-in">
+        <div class="kicker">The offer</div>
+        <div class="head">Both people get 15 seconds to say ready.</div>
+        <div class="sub">A call starts only when both do.</div>
+      </div>
+    </div>
+    <div id="h7" class="clip" data-start="31" data-duration="4" data-track-index="2">
+      <div class="hdr-in" id="h7-in">
+        <div class="kicker">The offer</div>
+        <div class="head">Emi declined, so she leaves the queue.</div>
+        <div class="sub">Finn goes back to the front and keeps his place.</div>
+      </div>
+    </div>
+    <div id="h8" class="clip" data-start="35" data-duration="5" data-track-index="2">
+      <div class="hdr-in" id="h8-in">
+        <div class="kicker" id="h8-k">The order</div>
+        <div class="head">
+          <span class="w h8w">Exact languages,</span>
+          <span class="w h8w">partner request,</span>
+          <span class="w h8w">shared topic,</span>
+          <span class="w h8w">longest wait.</span>
+        </div>
+        <div class="sub" id="h8-s">Strict priority: a lower rule never outranks a higher one.</div>
+      </div>
+    </div>
+
+    <!-- corner panel -->
+    <div id="a0" class="clip" data-start="0" data-duration="4.5" data-track-index="3">
+      <div class="algo-box algo-in" id="a0-in"><span class="algo-tag">Queue</span><span class="algo-txt">One batch pass a second over all waiters · O(n)</span></div>
+    </div>
+    <div id="a1" class="clip" data-start="4.5" data-duration="5" data-track-index="3">
+      <div class="algo-box algo-in" id="a1-in"><span class="algo-tag">Search</span><span class="algo-txt">Hash map keyed by language set · O(1) lookup</span></div>
+    </div>
+    <div id="a2" class="clip" data-start="9.5" data-duration="5" data-track-index="3">
+      <div class="algo-box algo-in" id="a2-in"><span class="algo-tag">Rank</span><span class="algo-txt">Partner requests in a hash set · O(1) check</span></div>
+    </div>
+    <div id="a3" class="clip" data-start="14.5" data-duration="5.5" data-track-index="3">
+      <div class="algo-box algo-in" id="a3-in"><span class="algo-tag">Pair</span><span class="algo-txt">Bucket by topic, pair oldest first · O(group)</span></div>
+    </div>
+    <div id="a4" class="clip" data-start="20" data-duration="3" data-track-index="3">
+      <div class="algo-box algo-in" id="a4-in"><span class="algo-tag">Search</span><span class="algo-txt">Index of language → waiters · at most 5 lookups</span></div>
+    </div>
+    <div id="a5" class="clip" data-start="23" data-duration="4.5" data-track-index="3">
+      <div class="algo-box algo-in" id="a5-in"><span class="algo-tag">Pair</span><span class="algo-txt">Greedy best-first on a priority tuple</span></div>
+    </div>
+    <div id="a6" class="clip" data-start="27.5" data-duration="3.5" data-track-index="3">
+      <div class="algo-box algo-in" id="a6-in"><span class="algo-tag">State</span><span class="algo-txt">State machine under one lock · no double match</span></div>
+    </div>
+    <div id="a7" class="clip" data-start="31" data-duration="4" data-track-index="3">
+      <div class="algo-box algo-in" id="a7-in"><span class="algo-tag">Queue</span><span class="algo-txt">Requeue keeps the original join time</span></div>
+    </div>
+    <div id="a8" class="clip" data-start="35" data-duration="5" data-track-index="3">
+      <div class="algo-box algo-in" id="a8-in"><span class="algo-tag">Total</span><span class="algo-txt">Whole pass about O(n log n), not O(n²)</span></div>
+    </div>
+
+    <!-- exact-set groups -->
+    <div class="frame" id="g-en" style="left: 182px; width: 644px"></div>
+    <div class="frame" id="g-enes" style="left: 836px; width: 434px"></div>
+    <div class="frame" id="g-enfr" style="left: 1280px; width: 224px"></div>
+    <div class="frame" id="g-fr" style="left: 1514px; width: 224px"></div>
+    <div class="glabel" id="gl-en" style="left: 190px">EN</div>
+    <div class="glabel" id="gl-enes" style="left: 844px">EN + ES</div>
+    <div class="glabel hot" id="gl-enes-hot" style="left: 844px">EN + ES · partner request</div>
+    <div class="glabel" id="gl-enfr" style="left: 1288px">EN + FR</div>
+    <div class="glabel" id="gl-fr" style="left: 1522px">FR</div>
+
+    <!-- overlap connectors -->
+    <div class="conn" id="k1" style="left: 652px; color: var(--en)">English<i style="background: var(--en)"></i></div>
+    <div class="conn" id="k2" style="left: 1052px; color: var(--fr)">French<i style="background: var(--fr)"></i></div>
+
+    <!-- pair annotations -->
+    <div class="reason" id="r1" style="left: 252px"><span>1 · Partner request</span></div>
+    <div class="reason" id="r2" style="left: 756px"><span>2 · Shared topic</span></div>
+    <div class="reason" id="r3" style="left: 1260px"><span>3 · Longest wait</span></div>
+    <div class="call" id="l1" style="left: 252px">EN + ES · no set topic</div>
+    <div class="call live" id="l1b" style="left: 252px">Call started · EN + ES</div>
+    <div class="call" id="l2" style="left: 756px">EN · topic: Sports</div>
+    <div class="call live" id="l2b" style="left: 756px">Call started · Sports</div>
+    <div class="call" id="l3" style="left: 1260px">EN · no set topic</div>
+
+    <!-- people -->
+    <div class="card" id="c-finn">
+      <div class="who"><span class="av" style="background: #3d5a80">F</span><span class="nm">Finn</span></div>
+      <div class="chips"><span class="chip en">EN</span></div>
+      <div class="topic none">No topic</div>
+      <div class="wait" id="w-finn">waited 60 s</div>
+      <div class="status" id="s-finn">Ready</div>
+    </div>
+    <div class="card" id="c-chloe">
+      <div class="who"><span class="av" style="background: #9c4f6e">C</span><span class="nm">Chloe</span></div>
+      <div class="chips"><span class="chip en">EN</span><span class="chip es">ES</span></div>
+      <div class="topic">Music</div>
+      <div class="wait">waited 50 s</div>
+      <div class="status" id="s-chloe">Ready</div>
+    </div>
+    <div class="card" id="c-ana">
+      <div class="who"><span class="av" style="background: #b5651d">A</span><span class="nm">Ana</span></div>
+      <div class="chips"><span class="chip en">EN</span></div>
+      <div class="topic" id="t-ana">Sports</div>
+      <div class="wait">waited 40 s</div>
+      <div class="status" id="s-ana">Ready</div>
+    </div>
+    <div class="card" id="c-emi">
+      <div class="who"><span class="av" style="background: #6a4c93">E</span><span class="nm">Emi</span></div>
+      <div class="chips"><span class="chip en">EN</span><span class="chip fr">FR</span></div>
+      <div class="topic">Travel</div>
+      <div class="wait">waited 30 s</div>
+      <div class="status no" id="s-emi">Declined</div>
+    </div>
+    <div class="card" id="c-ben">
+      <div class="who"><span class="av" style="background: #2a7f62">B</span><span class="nm">Ben</span></div>
+      <div class="chips"><span class="chip en">EN</span></div>
+      <div class="topic" id="t-ben">Sports</div>
+      <div class="wait">waited 25 s</div>
+      <div class="status" id="s-ben">Ready</div>
+    </div>
+    <div class="card" id="c-dev">
+      <div class="who"><span class="av" style="background: #8a5a44">D</span><span class="nm">Dev</span></div>
+      <div class="chips"><span class="chip en">EN</span><span class="chip es">ES</span></div>
+      <div class="topic">Politics</div>
+      <div class="wait">waited 10 s</div>
+      <div class="status" id="s-dev">Ready</div>
+    </div>
+    <div class="card" id="c-gus">
+      <div class="who"><span class="av" style="background: #4a6741">G</span><span class="nm">Gus</span></div>
+      <div class="chips"><span class="chip fr">FR</span></div>
+      <div class="topic none">No topic</div>
+      <div class="wait">waited 5 s</div>
+      <div class="status" id="s-gus">Ready</div>
+    </div>
+  </div>
+
+  <script>
+    const tl = gsap.timeline({ paused: true });
+
+    const TOP = 328;
+    const LOW = 660;
+    // Where each person stands at each stage (x; y is TOP or LOW).
+    const queue = { finn: 206, chloe: 424, ana: 642, emi: 860, ben: 1078, dev: 1296, gus: 1514 };
+    const group = { finn: 194, ana: 404, ben: 614, chloe: 848, dev: 1058, emi: 1292, gus: 1526 };
+    const pair = { chloe: 252, dev: 460, ana: 756, ben: 964, finn: 1260, emi: 1468 };
+    const left = { finn: 440, emi: 840, gus: 1240 };
+    const order = ["finn", "chloe", "ana", "emi", "ben", "dev", "gus"];
+
+    // Track each card's position so every move is an explicit fromTo (seek-safe).
+    const pos = {};
+    order.forEach((id) => {
+      pos[id] = { x: queue[id], y: TOP };
+    });
+    const move = (id, x, y, at, dur = 0.8) => {
+      tl.fromTo(
+        "#c-" + id,
+        { x: pos[id].x, y: pos[id].y },
+        { x, y, duration: dur, ease: "power3.inOut", immediateRender: false },
+        at,
+      );
+      pos[id] = { x, y };
+    };
+    const show = (sel, at, dur = 0.35) =>
+      tl.fromTo(sel, { opacity: 0 }, { opacity: 1, duration: dur, ease: "power2.out", immediateRender: false }, at);
+    const hide = (sel, at, dur = 0.25) =>
+      tl.fromTo(sel, { opacity: 1 }, { opacity: 0, duration: dur, ease: "power2.in", immediateRender: false }, at);
+
+    // Everything except the first header and the cards' entrance starts hidden.
+    gsap.set(
+      ".frame, .glabel, .conn, .reason, .call, .status, #h1-in, #h2-in, #h3-in, #h4-in, #h5-in, #h6-in, #h7-in, #h8-k, #h8-s, .h8w, .algo-in:not(#a0-in)",
+      { opacity: 0 },
+    );
+
+    // Headers: blur in, fade out just before the slot ends.
+    const headers = [
+      ["#h0-in", 0, 4.5],
+      ["#h1-in", 4.5, 9.5],
+      ["#h2-in", 9.5, 14.5],
+      ["#h3-in", 14.5, 20],
+      ["#h4-in", 20, 23],
+      ["#h5-in", 23, 27.5],
+      ["#h6-in", 27.5, 31],
+      ["#h7-in", 31, 35],
+      ["#a0-in", 0, 4.5],
+      ["#a1-in", 4.5, 9.5],
+      ["#a2-in", 9.5, 14.5],
+      ["#a3-in", 14.5, 20.0],
+      ["#a4-in", 20, 23],
+      ["#a5-in", 23, 27.5],
+      ["#a6-in", 27.5, 31.0],
+      ["#a7-in", 31, 35],
+    ];
+    headers.forEach(([sel, start, end]) => {
+      // The first header is already on screen at frame 0 (it is the thumbnail).
+      if (start > 0) {
+        tl.fromTo(
+          sel,
+          { opacity: 0, filter: "blur(8px)" },
+          { opacity: 1, filter: "blur(0px)", duration: 0.3, ease: "power2.out", immediateRender: false },
+          start + 0.05,
+        );
+      }
+      tl.fromTo(
+        sel,
+        { opacity: 1 },
+        { opacity: 0, duration: 0.2, ease: "power2.in", immediateRender: false },
+        end - 0.22,
+      );
+    });
+
+    // 0s — seven people arrive in the queue, longest wait first.
+    order.forEach((id, i) => {
+      gsap.set("#c-" + id, { x: queue[id], y: TOP + 40, opacity: 0 });
+      tl.fromTo(
+        "#c-" + id,
+        { y: TOP + 40, opacity: 0 },
+        { y: TOP, opacity: 1, duration: 0.6, ease: "expo.out", immediateRender: false },
+        0.5 + i * 0.1,
+      );
+    });
+
+    // 4.5s — step 1: group by exact language set.
+    ["finn", "ana", "ben", "chloe", "dev", "emi", "gus"].forEach((id, i) => {
+      move(id, group[id], TOP, 5.1 + i * 0.05);
+    });
+    show("#g-en, #g-enes, #g-enfr, #g-fr", 5.9);
+    show("#gl-en, #gl-enes, #gl-enfr, #gl-fr", 6.0);
+
+    // 9.5s — step 2a: the partner request lifts the EN+ES pair to the top.
+    hide("#gl-enes", 10.1);
+    show("#gl-enes-hot", 10.2);
+    tl.fromTo(
+      "#g-enes",
+      { borderColor: "#d9d2c3", backgroundColor: "rgba(91,61,245,0)" },
+      {
+        borderColor: "#5b3df5",
+        backgroundColor: "rgba(91,61,245,0.08)",
+        duration: 0.4,
+        ease: "power2.inOut",
+        immediateRender: false,
+      },
+      10.2,
+    );
+    move("chloe", pair.chloe, LOW, 11.9);
+    move("dev", pair.dev, LOW, 11.96);
+    hide("#g-enes, #gl-enes-hot", 11.9);
+    show("#r1", 12.6);
+    show("#l1", 12.85);
+
+    // 14.5s — step 2b: shared topic beats the longer wait.
+    tl.fromTo(
+      "#t-ana, #t-ben",
+      { color: "#1c1b19", scale: 1 },
+      { color: "#5b3df5", scale: 1.12, duration: 0.4, ease: "back.out(1.6)", immediateRender: false },
+      15.3,
+    );
+    move("ana", pair.ana, LOW, 16.2);
+    move("ben", pair.ben, LOW, 16.26);
+    show("#r2", 16.9);
+    show("#l2", 17.15);
+
+    // 20s — step 3: leftovers pair on any shared language.
+    hide("#g-en, #g-enfr, #g-fr, #gl-en, #gl-enfr, #gl-fr", 20.1);
+    move("finn", left.finn, TOP, 20.3);
+    move("emi", left.emi, TOP, 20.36);
+    move("gus", left.gus, TOP, 20.42);
+    show("#k1", 21.2);
+    show("#k2", 21.6);
+
+    // 23s — Emi could go either way; the longer wait wins.
+    tl.fromTo(
+      "#w-finn",
+      { color: "#6b665c", fontWeight: 400 },
+      { color: "#5b3df5", fontWeight: 700, duration: 0.3, ease: "power2.out", immediateRender: false },
+      23.5,
+    );
+    hide("#k1, #k2", 24.2);
+    move("finn", pair.finn, LOW, 24.4);
+    move("emi", pair.emi, LOW, 24.46);
+    show("#r3", 25.1);
+    show("#l3", 25.35);
+
+    // 27.5s — the offer: everyone answers within 15 seconds.
+    [
+      ["chloe", 28.4],
+      ["dev", 28.7],
+      ["ana", 29.0],
+      ["ben", 29.2],
+      ["finn", 29.6],
+      ["emi", 30.0],
+    ].forEach(([id, at]) => {
+      tl.fromTo(
+        "#s-" + id,
+        { opacity: 0, scale: 0.8 },
+        { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(1.8)", immediateRender: false },
+        at,
+      );
+    });
+    hide("#l1, #l2", 30.2);
+    show("#l1b, #l2b", 30.4);
+
+    // 31s — decline: Emi leaves, Finn returns to the front.
+    hide("#c-emi", 31.6, 0.5);
+    hide("#r3, #l3, #s-finn", 31.6);
+    move("finn", 194, TOP, 32.0, 0.9);
+
+    // 35s — the rule in one line.
+    show("#h8-k", 35.05, 0.3);
+    show("#a8-in", 35.05, 0.3);
+    tl.fromTo(
+      ".h8w",
+      { opacity: 0, filter: "blur(6px)" },
+      { opacity: 1, filter: "blur(0px)", duration: 0.3, ease: "power2.out", stagger: 0.45, immediateRender: false },
+      35.2,
+    );
+    show("#h8-s", 37.0, 0.4);
+
+    window.__timelines["pairing"] = tl;
+  </script>
+</template>

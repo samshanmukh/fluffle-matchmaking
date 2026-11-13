@@ -1,0 +1,21 @@
+{
+  "name": "After a call: who gets the person still waiting",
+  "description": "Ana and Ben finish a call while Carl waits. They are not offered each other again; Carl has waited longest, and Ana rejoined first, so Ana gets Carl.",
+  "steps": [
+    {"at": 0, "do": "join", "user": "ana", "languages": ["english"], "topic": "sports"},
+    {"at": 0, "do": "join", "user": "ben", "languages": ["english"], "topic": "sports"},
+    {"at": 1000, "do": "tick"},
+    {"at": 2000, "do": "ready", "user": "ana"},
+    {"at": 2000, "do": "ready", "user": "ben"},
+    {"do": "expect_phase", "user": "ana", "phase": "in_call"},
+    {"at": 15000, "do": "join", "user": "carl", "languages": ["english"], "topic": "sports"},
+    {"at": 16000, "do": "tick"},
+    {"do": "expect_no_offers"},
+    {"at": 60000, "do": "end_call", "user": "ana"},
+    {"at": 61000, "do": "join", "user": "ana", "languages": ["english"], "topic": "sports"},
+    {"at": 61000, "do": "join", "user": "ben", "languages": ["english"], "topic": "sports"},
+    {"at": 62000, "do": "tick"},
+    {"do": "expect_offer", "users": ["ana", "carl"], "languages": ["english"], "topic": "sports"},
+    {"do": "expect_phase", "user": "ben", "phase": "waiting"}
+  ]
+}

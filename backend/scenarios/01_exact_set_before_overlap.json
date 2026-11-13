@@ -1,0 +1,15 @@
+{
+  "name": "Exact language set is paired before an overlap",
+  "description": "Ana (English) is matched with Carl (English), not Bea (English + Spanish) who joined earlier. Bea then pairs on the overlap.",
+  "steps": [
+    {"at": 0, "do": "join", "user": "ana", "languages": ["english"]},
+    {"at": 1000, "do": "join", "user": "bea", "languages": ["english", "spanish"]},
+    {"at": 2000, "do": "join", "user": "carl", "languages": ["english"]},
+    {"at": 3000, "do": "tick"},
+    {"do": "expect_offer", "users": ["ana", "carl"], "languages": ["english"]},
+    {"do": "expect_phase", "user": "bea", "phase": "waiting"},
+    {"at": 4000, "do": "join", "user": "dan", "languages": ["spanish", "french"]},
+    {"at": 5000, "do": "tick"},
+    {"do": "expect_offer", "users": ["bea", "dan"], "languages": ["spanish"], "topic": "none"}
+  ]
+}

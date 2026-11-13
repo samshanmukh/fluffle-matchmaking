@@ -1,0 +1,25 @@
+{
+  "name": "Unanswered offers",
+  "description": "After 15 seconds, whoever did not answer leaves. Someone who said ready is requeued. If neither answered, both leave.",
+  "steps": [
+    {"at": 0, "do": "join", "user": "ana", "languages": ["english"]},
+    {"at": 0, "do": "join", "user": "ben", "languages": ["english"]},
+    {"at": 0, "do": "join", "user": "carl", "languages": ["spanish"]},
+    {"at": 0, "do": "join", "user": "dana", "languages": ["spanish"]},
+    {"at": 1000, "do": "tick"},
+    {"do": "expect_offer", "users": ["ana", "ben"]},
+    {"do": "expect_offer", "users": ["carl", "dana"]},
+    {"at": 5000, "do": "ready", "user": "ana"},
+    {"at": 15999, "do": "tick"},
+    {"do": "expect_phase", "user": "ben", "phase": "offered"},
+    {"at": 16000, "do": "tick"},
+    {"do": "expect_event", "user": "ben", "event": "left", "reason": "offer_timeout"},
+    {"do": "expect_event", "user": "ana", "event": "requeued", "reason": "partner_timed_out"},
+    {"do": "expect_event", "user": "carl", "event": "left", "reason": "offer_timeout"},
+    {"do": "expect_event", "user": "dana", "event": "left", "reason": "offer_timeout"},
+    {"do": "expect_phase", "user": "ana", "phase": "waiting"},
+    {"do": "expect_phase", "user": "ben", "phase": "idle"},
+    {"do": "expect_phase", "user": "carl", "phase": "idle"},
+    {"do": "expect_phase", "user": "dana", "phase": "idle"}
+  ]
+}

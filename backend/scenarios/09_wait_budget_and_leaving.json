@@ -1,0 +1,19 @@
+{
+  "name": "Waiting, leaving and the 10-minute budget",
+  "description": "A user holds one place, can leave at any time, and after 10 minutes without a match is told and returned to the start.",
+  "steps": [
+    {"at": 0, "do": "join", "user": "ana", "languages": ["english"]},
+    {"do": "expect_phase", "user": "ana", "phase": "waiting"},
+    {"at": 5000, "do": "leave", "user": "ana"},
+    {"do": "expect_event", "user": "ana", "event": "left", "reason": "cancelled"},
+    {"do": "expect_phase", "user": "ana", "phase": "idle"},
+    {"at": 10000, "do": "join", "user": "ben", "languages": ["swahili"]},
+    {"at": 609999, "do": "tick"},
+    {"do": "expect_phase", "user": "ben", "phase": "waiting"},
+    {"at": 610000, "do": "tick"},
+    {"do": "expect_event", "user": "ben", "event": "left", "reason": "wait_timeout"},
+    {"do": "expect_phase", "user": "ben", "phase": "idle"},
+    {"at": 611000, "do": "join", "user": "ben", "languages": ["swahili"]},
+    {"do": "expect_phase", "user": "ben", "phase": "waiting"}
+  ]
+}

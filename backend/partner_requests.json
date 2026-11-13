@@ -1,0 +1,5 @@
+[
+  { "languages": ["english", "spanish"] },
+  { "languages": ["english"], "topic": "politics" },
+  { "languages": ["hindi"] }
+]
