@@ -1,0 +1,27 @@
+# Home: the wait estimate, your region, and choosing languages (limit of five).
+appId: ${APP_ID}
+---
+- runFlow: ../shared/open.yaml
+- assertVisible: "Active now"
+- assertVisible: "1 of 5"
+# Simulators and emulators report the United States as their region.
+- assertVisible: ".*United States.*"
+- tapOn:
+    text: "Spanish"
+    retryTapIfNoChange: false
+- tapOn:
+    text: "Hindi"
+    retryTapIfNoChange: false
+- tapOn:
+    text: "French"
+    retryTapIfNoChange: false
+- tapOn:
+    text: "German"
+    retryTapIfNoChange: false
+- assertVisible: ".*5 of 5.*"
+- tapOn:
+    text: "German"
+    retryTapIfNoChange: false
+- assertVisible: "4 of 5"
+- takeScreenshot: 01-home
+- assertVisible: "Find a match"

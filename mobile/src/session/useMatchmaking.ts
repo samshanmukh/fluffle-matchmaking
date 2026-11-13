@@ -32,7 +32,8 @@ export function useMatchmaking(identity: Identity | null) {
 
     const connect = () => {
       dispatch({ type: 'link', link: 'connecting', now: Date.now() });
-      const url = `${WS_URL}/ws?user_id=${encodeURIComponent(identity.id)}&name=${encodeURIComponent(identity.name)}`;
+      const region = identity.region ? `&region=${identity.region}` : '';
+      const url = `${WS_URL}/ws?user_id=${encodeURIComponent(identity.id)}&name=${encodeURIComponent(identity.name)}${region}`;
       const ws = new WebSocket(url);
       socket.current = ws;
       let replaced = false;
@@ -76,8 +77,8 @@ export function useMatchmaking(identity: Identity | null) {
       socket.current?.close();
       socket.current = null;
     };
-    // Reconnect when the name changes: the server reads it from the URL.
-  }, [identity?.id, identity?.name]);
+    // Reconnect when the name or region changes: the server reads them from the URL.
+  }, [identity?.id, identity?.name, identity?.region]);
 
   const join = useCallback(
     (languages: string[], topic: string | null) => {

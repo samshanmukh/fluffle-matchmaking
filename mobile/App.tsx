@@ -1,3 +1,4 @@
+import { Outfit_400Regular, Outfit_500Medium, Outfit_600SemiBold, useFonts } from '@expo-google-fonts/outfit';
 import * as Haptics from 'expo-haptics';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
@@ -11,15 +12,12 @@ import { OfferScreen } from './src/screens/OfferScreen';
 import { StartScreen } from './src/screens/StartScreen';
 import { WaitingScreen } from './src/screens/WaitingScreen';
 import { useMatchmaking } from './src/session/useMatchmaking';
-import { Outfit_400Regular, Outfit_500Medium, Outfit_600SemiBold, useFonts } from '@expo-google-fonts/outfit';
-
-import { Backdrop } from './src/components/Backdrop';
 import { EASE_OUT, color } from './src/theme';
 
 // The four screens are phases of one server-driven session, not routes: the
 // server moves the user between them, so there is no navigator to get out of
-// step with it. They share one backdrop; the old phase is removed at once and
-// the new one fades in, so two screens of text never overlap mid-fade.
+// step with it. The old phase is removed at once and the new one fades in, so
+// two screens of text never overlap mid-fade.
 const enter = FadeIn.duration(240).easing(EASE_OUT).reduceMotion(ReduceMotion.Never);
 
 export default function App() {
@@ -55,17 +53,17 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
       <View style={styles.root}>
-        <Backdrop />
         {identity && fontsReady && (
           <Animated.View key={view.kind} entering={enter} style={StyleSheet.absoluteFill}>
             {view.kind === 'start' && (
               <StartScreen
-                key={identity.name}
                 view={view}
                 link={state.link}
+                userId={identity.id}
                 name={identity.name}
+                region={identity.region}
                 languages={languages}
                 topic={topic}
                 onLanguages={setLanguages}
@@ -75,11 +73,12 @@ export default function App() {
                 onDismissNotice={dismissNotice}
               />
             )}
-            {view.kind === 'waiting' && <WaitingScreen view={view} languages={languages} topic={topic} onCancel={cancel} />}
+            {view.kind === 'waiting' && <WaitingScreen view={view} userId={identity.id} languages={languages} topic={topic} onCancel={cancel} />}
             {view.kind === 'offer' && (
               <OfferScreen
                 key={view.matchId}
                 view={view}
+                region={identity.region}
                 onReady={() => {
                   void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
                   respond(view.matchId, 'ready');
@@ -87,7 +86,7 @@ export default function App() {
                 onDecline={(neverAgain) => respond(view.matchId, 'decline', neverAgain)}
               />
             )}
-            {view.kind === 'call' && <CallScreen view={view} onEnd={endCall} />}
+            {view.kind === 'call' && <CallScreen view={view} region={identity.region} onEnd={endCall} />}
           </Animated.View>
         )}
       </View>
@@ -96,5 +95,6 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: color.ground },
+  // Purple behind everything: each screen's header sits on it, and its sheet covers the rest.
+  root: { flex: 1, backgroundColor: color.accent },
 });

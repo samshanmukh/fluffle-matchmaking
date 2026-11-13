@@ -43,6 +43,7 @@ export interface OfferView {
   matchId: number;
   partnerId: string;
   partnerName: string;
+  partnerRegion: string | null;
   languages: string[];
   topic: string | null;
   windowMs: number;
@@ -56,6 +57,7 @@ export interface CallView {
   matchId: number;
   partnerId: string;
   partnerName: string;
+  partnerRegion: string | null;
   languages: string[];
   topic: string | null;
   startedAt: number;
@@ -156,6 +158,7 @@ function onServer(state: State, msg: ServerMsg, now: number): State {
           matchId: msg.match_id,
           partnerId: msg.partner,
           partnerName: msg.partner_name ?? msg.partner,
+          partnerRegion: msg.partner_region ?? null,
           languages: msg.languages,
           topic: msg.topic,
           windowMs: msg.expires_in_ms,
@@ -173,6 +176,7 @@ function onServer(state: State, msg: ServerMsg, now: number): State {
           matchId: msg.match_id,
           partnerId: msg.partner,
           partnerName: msg.partner_name ?? msg.partner,
+          partnerRegion: msg.partner_region ?? null,
           languages: msg.languages,
           topic: msg.topic,
           startedAt: now,

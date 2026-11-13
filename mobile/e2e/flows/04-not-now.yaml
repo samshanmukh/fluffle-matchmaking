@@ -1,0 +1,19 @@
+# partner: --answer ready --delay 12000
+# Declining takes you out of the queue, and the start screen says so.
+appId: ${APP_ID}
+---
+- runFlow: ../shared/open.yaml
+- tapOn:
+    text: "Find a match"
+    retryTapIfNoChange: false
+- extendedWaitUntil:
+    visible: "Say hi to"
+    timeout: 20000
+- tapOn:
+    text: "Not now"
+    retryTapIfNoChange: false
+- extendedWaitUntil:
+    visible: ".*Skipped.*"
+    timeout: 10000
+- assertVisible: ".*left the queue.*"
+- takeScreenshot: 04-declined

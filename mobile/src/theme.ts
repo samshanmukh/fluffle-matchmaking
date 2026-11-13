@@ -1,36 +1,43 @@
 import { Easing } from 'react-native-reanimated';
 
-// The look: a soft grey room, warm light behind frosted glass, one orange.
-// Glass panels are translucent white over a blurred backdrop; the orange glow
-// behind them is what gives the frost something to catch.
+// The look: a purple header that says where you are, and a light sheet with
+// rounded shoulders below it that holds what you do. Flat white cards, dark
+// violet for what is selected, purple for the one main action.
 export const color = {
-  ground: '#E7E7E9',
-  ink: '#151515',
-  inkSoft: '#6B6B70',
-  inkFaint: '#9A9AA0',
-  accent: '#F04A1D',
-  accentDeep: '#D93A10',
-  accentWarm: '#FF8A3C',
+  accent: '#6A5BC4',
+  accentLight: '#8E80E0',
   onAccent: '#FFFFFF',
+  onAccentSoft: 'rgba(255,255,255,0.74)',
+  ground: '#F5F5F7',
   solid: '#FFFFFF',
-  glass: 'rgba(255,255,255,0.58)',
-  glassStrong: 'rgba(255,255,255,0.78)',
-  glassEdge: 'rgba(255,255,255,0.9)',
-  live: '#1FA971',
-  warn: '#C77700',
+  ink: '#1C1B29',
+  inkSoft: '#77768A',
+  inkFaint: '#A9A8B8',
+  /** Chosen chips: a darker violet than the header, with white text. */
+  selected: '#3E2F86',
+  onSelected: '#FFFFFF',
+  tint: 'rgba(106,91,196,0.12)',
+  live: '#5ED36A',
+  warn: '#F2B84B',
+  danger: '#E5547A',
+  off: '#C9C8D6',
 };
 
-export const space = { xs: 4, s: 8, m: 12, l: 16, xl: 24, xxl: 32, edge: 20 };
-export const radius = { card: 32, bar: 40, pill: 999 };
+export const space = { xs: 4, s: 8, m: 12, l: 16, xl: 22, xxl: 28, edge: 20 };
+export const radius = { card: 20, sheet: 34, pill: 999 };
 
-export const font = { regular: 'Outfit_400Regular', medium: 'Outfit_500Medium', semibold: 'Outfit_600SemiBold' };
+export const font = {
+  regular: { fontFamily: 'Outfit_400Regular' },
+  medium: { fontFamily: 'Outfit_500Medium' },
+  semibold: { fontFamily: 'Outfit_600SemiBold' },
+} as const;
 
 export const type = {
-  display: { fontFamily: font.medium, fontSize: 38, lineHeight: 44, letterSpacing: -0.6 },
-  title: { fontFamily: font.medium, fontSize: 22, lineHeight: 28, letterSpacing: -0.2 },
-  body: { fontFamily: font.regular, fontSize: 17, lineHeight: 24 },
-  bodyStrong: { fontFamily: font.medium, fontSize: 17, lineHeight: 24 },
-  small: { fontFamily: font.regular, fontSize: 15, lineHeight: 21 },
+  display: { ...font.medium, fontSize: 30, lineHeight: 36, letterSpacing: -0.4 },
+  title: { ...font.medium, fontSize: 18, lineHeight: 23 },
+  body: { ...font.regular, fontSize: 15, lineHeight: 21 },
+  bodyStrong: { ...font.medium, fontSize: 15, lineHeight: 21 },
+  small: { ...font.regular, fontSize: 13, lineHeight: 18 },
 } as const;
 
 export const EASE_OUT = Easing.bezier(0.23, 1, 0.32, 1);

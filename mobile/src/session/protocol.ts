@@ -31,6 +31,8 @@ export type ServerMsg =
       match_id: number;
       partner: string;
       partner_name?: string;
+      /** Two-letter country code the partner connected with, if they gave one. */
+      partner_region?: string | null;
       languages: string[];
       topic: string | null;
       expires_in_ms: number;
@@ -40,6 +42,8 @@ export type ServerMsg =
       match_id: number;
       partner: string;
       partner_name?: string;
+      /** Two-letter country code the partner connected with, if they gave one. */
+      partner_region?: string | null;
       languages: string[];
       topic: string | null;
     }

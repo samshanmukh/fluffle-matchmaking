@@ -4,10 +4,10 @@ import { StyleSheet, Text } from 'react-native';
 import { color, font, radius } from '../theme';
 import { PressableScale } from './PressableScale';
 
-type Variant = 'accent' | 'ink' | 'solid';
+type Variant = 'accent' | 'solid' | 'danger';
 
-const FILL: Record<Variant, string> = { accent: color.accent, ink: color.ink, solid: color.solid };
-const INK: Record<Variant, string> = { accent: color.onAccent, ink: '#FFFFFF', solid: color.ink };
+const FILL: Record<Variant, string> = { accent: color.accent, solid: color.ground, danger: color.danger };
+const INK: Record<Variant, string> = { accent: color.onAccent, solid: color.ink, danger: '#FFFFFF' };
 
 interface Props {
   label: string;
@@ -21,12 +21,14 @@ export function Button({ label, onPress, variant = 'accent', icon, disabled = fa
   return (
     <PressableScale
       accessibilityRole="button"
+      // Named explicitly: otherwise the icon's glyph becomes part of what a screen reader says.
+      accessibilityLabel={label}
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
       style={[styles.button, { backgroundColor: FILL[variant] }, disabled && styles.disabled]}
     >
-      {icon && <Ionicons name={icon} size={20} color={INK[variant]} />}
+      {icon && <Ionicons name={icon} size={18} color={INK[variant]} />}
       <Text style={[styles.label, { color: INK[variant] }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75} maxFontSizeMultiplier={1.4}>
         {label}
       </Text>
@@ -35,15 +37,7 @@ export function Button({ label, onPress, variant = 'accent', icon, disabled = fa
 }
 
 const styles = StyleSheet.create({
-  button: {
-    minHeight: 60,
-    borderRadius: radius.pill,
-    paddingHorizontal: 24,
-    flexDirection: 'row',
-    gap: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  button: { minHeight: 50, borderRadius: radius.pill, paddingHorizontal: 22, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center' },
   disabled: { opacity: 0.4 },
-  label: { fontFamily: font.medium, fontSize: 18, lineHeight: 24, flexShrink: 1 },
+  label: { ...font.medium, fontSize: 16, lineHeight: 22, flexShrink: 1 },
 });
