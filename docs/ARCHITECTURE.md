@@ -55,7 +55,7 @@ flowchart TB
     end
     subgraph server.rs
         WS["/ws  one task per connection"]
-        HTTP["/estimate  /stats  /health"]
+        HTTP["/estimate  /presence  /stats  /health"]
         TICK[tick task]
         HUB["Hub (behind one Mutex):<br/>Engine + connections + names"]
     end
@@ -92,7 +92,7 @@ flowchart TB
 
 ## WebSocket protocol
 
-Connect to `/ws?user_id=<id>&name=<display name>`. All messages are JSON with a `type` field.
+Connect to `/ws?user_id=<id>&name=<display name>&region=<country code>`. `region` is optional: a two-letter ISO 3166-1 code such as `BR`, shown to the person's match as a flag. All messages are JSON with a `type` field.
 
 **Client to server**
 
@@ -112,8 +112,8 @@ Connect to `/ws?user_id=<id>&name=<display name>`. All messages are JSON with a 
 | `hello` | `user_id`, `state`, `offer_window_ms`, `wait_budget_ms` | Sent on connect. `state` is `{ "phase": "idle" \| "waiting" }` or `{ "phase": "offered" \| "in_call", "match_id": n }` |
 | `joined` | `estimate`, `wait_budget_ms` | In the queue |
 | `estimate` | `estimate` | The bucket changed while waiting |
-| `offer` | `match_id`, `partner`, `partner_name`, `languages`, `topic`, `expires_in_ms` | Both people get this together |
-| `call_started` | `match_id`, `partner`, `partner_name`, `languages`, `topic` | Both said ready |
+| `offer` | `match_id`, `partner`, `partner_name`, `partner_region`, `languages`, `topic`, `expires_in_ms` | Both people get this together |
+| `call_started` | `match_id`, `partner`, `partner_name`, `partner_region`, `languages`, `topic` | Both said ready |
 | `requeued` | `reason` (`partner_declined`, `partner_timed_out`), `wait_budget_ms` | Back in the queue, place kept |
 | `left` | `reason` (`cancelled`, `declined`, `offer_timeout`, `wait_timeout`) | Out of the queue |
 | `call_ended` | `match_id`, `reason` (`you_ended`, `partner_left`) | |
@@ -135,6 +135,7 @@ An `error` with code `no_such_offer` is normal under network delay: the answer a
 | Route | Returns |
 |---|---|
 | `GET /estimate?languages=english,spanish` | The pre-join estimate |
+| `GET /presence?languages=english,spanish&user_id=<id>` | Who is online now (excluding `user_id`): `online`, `waiting` (those in the queue who share a language), and for the first 12 an avatar code, region and `waiting` flag. No names or ids |
 | `GET /stats` | Counts of people waiting, open offers, calls, connections |
 | `GET /health` | `ok` |
 

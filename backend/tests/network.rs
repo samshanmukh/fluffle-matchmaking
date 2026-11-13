@@ -25,7 +25,13 @@ struct Client {
 
 impl Client {
     async fn connect(addr: SocketAddr, user: &str) -> Self {
-        let url = format!("ws://{addr}/ws?user_id={user}&name={user}-name");
+        // Ben says where he is (in lower case); Ana sends something that is not a country code.
+        let region = match user {
+            "ben" => "&region=br",
+            "ana" => "&region=mars",
+            _ => "",
+        };
+        let url = format!("ws://{addr}/ws?user_id={user}&name={user}-name{region}");
         let (ws, _) = tokio_tungstenite::connect_async(url).await.expect("connects");
         let mut c = Client { ws };
         assert_eq!(c.wait_for("hello").await["user_id"], user);
@@ -78,6 +84,8 @@ async fn two_people_match_answer_ready_and_talk() {
     assert_eq!(offer_a["match_id"], offer_b["match_id"]);
     assert_eq!(offer_a["partner"], "ben");
     assert_eq!(offer_a["partner_name"], "ben-name");
+    assert_eq!(offer_a["partner_region"], "BR");
+    assert_eq!(offer_b["partner_region"], Value::Null);
     assert_eq!(offer_a["languages"], json!(["english"]));
     assert_eq!(offer_a["topic"], "sports");
     assert_eq!(offer_a["expires_in_ms"], 15_000);
@@ -194,7 +202,19 @@ async fn the_start_screen_can_ask_for_an_estimate_over_http() {
     let mut ana = Client::connect(addr, "ana").await;
     ana.join(&["es"], None).await;
     assert!(get("/estimate?languages=en,es").await.contains("\"bucket\":\"under_a_minute\""));
-    assert!(get("/health").await.ends_with("ok"));
+
+    // The "who's online" list: counts, an avatar code, a region and a waiting flag; never a name or an id.
+    let here = get("/presence?languages=en,es").await;
+    assert!(here.contains("\"online\":1") && here.contains("\"waiting\":1"), "{here}");
+    assert!(here.contains("\"avatar\":") && here.contains("\"waiting\":true"), "{here}");
+    assert!(!here.contains("ana") && !here.contains("ben"), "{here}");
+
+    // Someone online who does not share a language is still listed, but not as ready to match.
+    let other = get("/presence?languages=klingon").await;
+    assert!(other.contains("\"online\":1") && other.contains("\"waiting\":0") && other.contains("\"waiting\":false"), "{other}");
+
+    // You are never listed to yourself.
+    assert!(get("/presence?languages=es&user_id=ana").await.contains("\"online\":0"));
 }
 
 #[tokio::test]

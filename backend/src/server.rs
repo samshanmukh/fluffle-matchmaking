@@ -5,7 +5,7 @@
 //! talk at once. Each connection has its own outbound queue, so a slow phone
 //! never blocks the engine.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -61,6 +61,9 @@ pub struct Hub {
     engine: Engine,
     conns: HashMap<String, Conn>,
     names: HashMap<String, String>,
+    /// Where each person says they are connecting from: an ISO 3166-1 alpha-2
+    /// code ("BR"), shown to their match as a flag. Absent when not given.
+    regions: HashMap<String, String>,
     started: Instant,
     next_conn: u64,
 }
@@ -84,10 +87,12 @@ impl Hub {
     fn dispatch(&self, events: Vec<Event>) {
         for event in events {
             let mut msg = serde_json::to_value(&event.kind).expect("events serialize");
-            // Offers and calls carry the partner's id; add the display name.
+            // Offers and calls carry the partner's id; add the display name and region.
             if let Some(partner) = msg.get("partner").and_then(Value::as_str) {
                 let name = self.names.get(partner).cloned().unwrap_or_else(|| partner.to_string());
+                let region = self.regions.get(partner).cloned().map_or(Value::Null, Value::String);
                 msg["partner_name"] = Value::String(name);
+                msg["partner_region"] = region;
             }
             self.send(&event.user, msg);
         }
@@ -123,6 +128,14 @@ struct ConnQuery {
     user_id: String,
     #[serde(default)]
     name: Option<String>,
+    #[serde(default)]
+    region: Option<String>,
+}
+
+/// Accepts a two-letter country code in either case; anything else is treated as not given.
+fn region_code(raw: Option<String>) -> Option<String> {
+    let code = raw?.trim().to_ascii_uppercase();
+    (code.len() == 2 && code.bytes().all(|b| b.is_ascii_uppercase())).then_some(code)
 }
 
 #[derive(Deserialize)]
@@ -136,6 +149,7 @@ pub fn build(cfg: &ServerConfig) -> (Router, Shared) {
         engine: Engine::new(cfg.engine.clone(), &cfg.partner_requests),
         conns: HashMap::new(),
         names: HashMap::new(),
+        regions: HashMap::new(),
         started: Instant::now(),
         next_conn: 0,
     }));
@@ -143,6 +157,7 @@ pub fn build(cfg: &ServerConfig) -> (Router, Shared) {
     let router = Router::new()
         .route("/health", get(|| async { "ok" }))
         .route("/estimate", get(estimate))
+        .route("/presence", get(presence))
         .route("/stats", get(stats))
         .route(
             "/ws",
@@ -188,6 +203,59 @@ async fn estimate(State(shared): State<Shared>, Query(q): Query<EstimateQuery>) 
     Json(hub.engine.estimate(&languages, hub.now()))
 }
 
+/// How many people the "who's online" display describes individually.
+const PRESENCE_LIMIT: usize = 12;
+
+/// A number the app turns into an avatar. Derived from the user id (FNV-1a, the
+/// same function the app uses), so a person looks the same in this list and
+/// in an offer, without their id ever being listed here.
+fn avatar_code(user: &str) -> u32 {
+    user.bytes().fold(2_166_136_261, |h, b| (h ^ u32::from(b)).wrapping_mul(16_777_619))
+}
+
+#[derive(Deserialize)]
+struct PresenceQuery {
+    /// Comma-separated.
+    #[serde(default)]
+    languages: String,
+    /// The person asking, so they are not listed to themselves.
+    #[serde(default)]
+    user_id: Option<String>,
+}
+
+/// Who is online right now, for the start screen: how many people are
+/// connected, how many of them are waiting and share one of the given
+/// languages (the ones who can be matched this minute), and for the first few
+/// an avatar code, a region and whether they are one of those. No names and
+/// no ids. People who are waiting come first, longest wait first.
+async fn presence(State(shared): State<Shared>, Query(q): Query<PresenceQuery>) -> impl IntoResponse {
+    let languages: Vec<String> = q.languages.split(',').map(str::to_string).collect();
+    let me = q.user_id.as_deref();
+    let hub = shared.lock().unwrap();
+
+    let ready: Vec<String> = hub.engine.waiting_sharing(&languages).into_iter().filter(|u| Some(u.as_str()) != me).collect();
+    let ready_set: HashSet<&str> = ready.iter().map(String::as_str).collect();
+    let mut others: Vec<&String> = hub.conns.keys().filter(|u| Some(u.as_str()) != me && !ready_set.contains(u.as_str())).collect();
+    let online = ready.len() + others.len();
+    // Only the first few are described, so only they need ordering: a stable
+    // order (by id), so the list does not shuffle between polls.
+    let shown = PRESENCE_LIMIT.saturating_sub(ready.len()).min(others.len());
+    if shown < others.len() {
+        others.select_nth_unstable(shown);
+        others.truncate(shown);
+    }
+    others.sort_unstable();
+
+    let person = |user: &String, waiting: bool| json!({ "avatar": avatar_code(user), "region": hub.regions.get(user), "waiting": waiting });
+    let people: Vec<Value> = ready
+        .iter()
+        .map(|u| person(u, true))
+        .chain(others.iter().map(|u| person(u, false)))
+        .take(PRESENCE_LIMIT)
+        .collect();
+    Json(json!({ "online": online, "waiting": ready.len(), "people": people }))
+}
+
 async fn stats(State(shared): State<Shared>) -> impl IntoResponse {
     let hub = shared.lock().unwrap();
     Json(json!({ "engine": hub.engine.stats(), "connections": hub.conns.len() }))
@@ -209,6 +277,10 @@ async fn client(socket: WebSocket, shared: Shared, q: ConnQuery, heartbeat: Dura
             let _ = old.tx.try_send(json!({ "type": "replaced" }).to_string());
         }
         hub.names.insert(user.clone(), q.name.unwrap_or_else(|| user.clone()));
+        match region_code(q.region) {
+            Some(code) => hub.regions.insert(user.clone(), code),
+            None => hub.regions.remove(&user),
+        };
         let cfg = hub.engine.config();
         let hello = json!({
             "type": "hello",
@@ -260,6 +332,9 @@ async fn client(socket: WebSocket, shared: Shared, q: ConnQuery, heartbeat: Dura
         let mut hub = shared.lock().unwrap();
         if hub.conns.get(&user).map(|c| c.id) == Some(conn_id) {
             hub.conns.remove(&user);
+            // Nothing is shown about someone who is gone, and the maps must not grow for ever.
+            hub.names.remove(&user);
+            hub.regions.remove(&user);
             let now = hub.now();
             let events = hub.engine.leave(&user, now);
             hub.dispatch(events);
